@@ -937,7 +937,6 @@ end
     end)
 end)
 
--- Main 탭에 Movement 그룹박스 생성
 local MovementGroup = Tabs.Main:AddLeftGroupbox('이동 기능 (RIVALS)')
 
 local Players = game:GetService("Players")
@@ -945,7 +944,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- 1. WalkSpeed (CFrame 기반 강제 속도 증폭)
+-- 1. WalkSpeed (CFrame 기반 이동 속도)
 MovementGroup:AddSlider('WalkSpeedSlider', {
     Text = '이동 속도 (WalkSpeed)',
     Default = 16,
@@ -954,16 +953,16 @@ MovementGroup:AddSlider('WalkSpeedSlider', {
     Rounding = 0
 })
 
--- 2. JumpPower (CFrame 텔레포트 점프)
+-- 2. JumpPower (점프력 강제 보정)
 MovementGroup:AddSlider('JumpPowerSlider', {
     Text = '점프력 (JumpPower)',
     Default = 50,
     Min = 50,
-    Max = 300,
+    Max = 200,
     Rounding = 0
 })
 
--- 3. Infinite Jump (무한 점프)
+-- 3. Infinite Jump (무한 점프 & State Reset)
 MovementGroup:AddToggle('InfJumpToggle', {
     Text = '무한 점프 (Infinite Jump)',
     Default = false
@@ -972,19 +971,37 @@ MovementGroup:AddToggle('InfJumpToggle', {
 UserInputService.JumpRequest:Connect(function()
     if Toggles and Toggles.InfJumpToggle and Toggles.InfJumpToggle.Value then
         local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local jumpImpulse = (Options and Options.JumpPowerSlider) and (Options.JumpPowerSlider.Value / 50) or 1
-            hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 50 * jumpImpulse, hrp.AssemblyLinearVelocity.Z)
+        
+        if hum and hrp then
+            -- RIVALS 점프 제한 상태 해제 후 강제 Y축 속도 부여
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            local jumpPower = (Options and Options.JumpPowerSlider) and Options.JumpPowerSlider.Value or 50
+            hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, jumpPower, hrp.AssemblyLinearVelocity.Z)
         end
     end
 end)
 
--- 4. Noclip (CFrame 보정 & 물리 충돌 비활성화)
+-- 4. Noclip (켜기/끄기 복구 정상화)
 MovementGroup:AddToggle('NoclipToggle', {
     Text = '벽 통과 (Noclip)',
     Default = false
 })
+
+-- Noclip 토글이 꺼질 때 CanCollide 상태를 다시 true로 복구
+Toggles.NoclipToggle:OnChanged(function(Value)
+    if not Value then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end)
 
 RunService.Stepped:Connect(function()
     if Toggles and Toggles.NoclipToggle and Toggles.NoclipToggle.Value then
@@ -999,7 +1016,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 5. Fly (RIVALS 전용 CFrame 비행)
+-- 5. Fly (RIVALS 강제 CFrame 비행)
 MovementGroup:AddToggle('FlyToggle', {
     Text = '비행 (Fly)',
     Default = false
@@ -1013,16 +1030,31 @@ MovementGroup:AddSlider('FlySpeedSlider', {
     Rounding = 0
 })
 
--- 이동 속도 증폭 및 Fly 메인 프레임 연산
+-- 비행 토글 종료 시 추락 방지 및 물리 속도 초기화
+Toggles.FlyToggle:OnChanged(function(Value)
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if Value then
+            hum:ChangeState(Enum.HumanoidStateType.Flying)
+        else
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+    end
+end)
+
+-- 메인 프레임 이동 처리 (WalkSpeed Boost & Fly)
 RunService.RenderStepped:Connect(function(delta)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
     local camera = workspace.CurrentCamera
 
-    if not hrp then return end
+    if not hrp or not hum then return end
 
-    -- RIVALS CFrame Fly 작동
+    -- Fly 작동 시
     if Toggles and Toggles.FlyToggle and Toggles.FlyToggle.Value then
+        hum:ChangeState(Enum.HumanoidStateType.Flying)
         local flySpeed = Options.FlySpeedSlider.Value
         local moveDir = Vector3.zero
 
@@ -1038,10 +1070,9 @@ RunService.RenderStepped:Connect(function(delta)
         end
         hrp.AssemblyLinearVelocity = Vector3.zero
 
-    -- 일반 이동 속도 증폭 (CFrame Boost)
+    -- WalkSpeed 가속
     elseif Options and Options.WalkSpeedSlider and Options.WalkSpeedSlider.Value > 16 then
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum and hum.MoveDirection.Magnitude > 0 then
+        if hum.MoveDirection.Magnitude > 0 then
             local speedMultiplier = (Options.WalkSpeedSlider.Value - 16) / 10
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * speedMultiplier * delta * 10)
         end
