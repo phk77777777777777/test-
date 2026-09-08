@@ -938,68 +938,60 @@ end
 end)
 
 -- Main 탭에 Movement 그룹박스 생성
-local MovementGroup = Tabs.Main:AddLeftGroupbox('이동 기능')
+local MovementGroup = Tabs.Main:AddLeftGroupbox('이동 기능 (RIVALS)')
 
--- 1. WalkSpeed (이동 속도)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. WalkSpeed (CFrame 기반 강제 속도 증폭)
 MovementGroup:AddSlider('WalkSpeedSlider', {
-    Text = 'WalkSpeed',
+    Text = '이동 속도 (WalkSpeed)',
     Default = 16,
     Min = 16,
-    Max = 300,
-    Rounding = 0,
-    Callback = function(Value)
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.WalkSpeed = Value
-        end
-    end
+    Max = 150,
+    Rounding = 0
 })
 
--- 2. JumpPower (점프력)
+-- 2. JumpPower (CFrame 텔레포트 점프)
 MovementGroup:AddSlider('JumpPowerSlider', {
-    Text = 'JumpPower',
+    Text = '점프력 (JumpPower)',
     Default = 50,
     Min = 50,
-    Max = 500,
-    Rounding = 0,
-    Callback = function(Value)
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.UseJumpPower = true
-            char.Humanoid.JumpPower = Value
-        end
-    end
+    Max = 300,
+    Rounding = 0
 })
 
 -- 3. Infinite Jump (무한 점프)
 MovementGroup:AddToggle('InfJumpToggle', {
     Text = '무한 점프 (Infinite Jump)',
-    Default = false,
-    Tooltip = '공중에서 스페이스바를 누르면 계속 점프합니다.'
+    Default = false
 })
 
-game:GetService("UserInputService").JumpRequest:Connect(function()
+UserInputService.JumpRequest:Connect(function()
     if Toggles and Toggles.InfJumpToggle and Toggles.InfJumpToggle.Value then
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid:ChangeState("Jumping")
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local jumpImpulse = (Options and Options.JumpPowerSlider) and (Options.JumpPowerSlider.Value / 50) or 1
+            hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 50 * jumpImpulse, hrp.AssemblyLinearVelocity.Z)
         end
     end
 end)
 
--- 4. Noclip (벽 통과)
+-- 4. Noclip (CFrame 보정 & 물리 충돌 비활성화)
 MovementGroup:AddToggle('NoclipToggle', {
     Text = '벽 통과 (Noclip)',
-    Default = false,
-    Tooltip = '모든 벽과 장애물을 통과합니다.'
+    Default = false
 })
 
-game:GetService("RunService").Stepped:Connect(function()
+RunService.Stepped:Connect(function()
     if Toggles and Toggles.NoclipToggle and Toggles.NoclipToggle.Value then
-        local char = game.Players.LocalPlayer.Character
+        local char = LocalPlayer.Character
         if char then
             for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then
+                if part:IsA("BasePart") then
                     part.CanCollide = false
                 end
             end
@@ -1007,87 +999,51 @@ game:GetService("RunService").Stepped:Connect(function()
     end
 end)
 
--- 5. Fly (날기)
+-- 5. Fly (RIVALS 전용 CFrame 비행)
 MovementGroup:AddToggle('FlyToggle', {
     Text = '비행 (Fly)',
-    Default = false,
-    Tooltip = '자유롭게 공중을 날아다닙니다.'
+    Default = false
 })
 
 MovementGroup:AddSlider('FlySpeedSlider', {
     Text = '비행 속도',
     Default = 50,
     Min = 10,
-    Max = 300,
+    Max = 200,
     Rounding = 0
 })
 
--- Fly 실행 로직
-local flying = false
-local bodyVelocity, bodyGyro
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+-- 이동 속도 증폭 및 Fly 메인 프레임 연산
+RunService.RenderStepped:Connect(function(delta)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local camera = workspace.CurrentCamera
 
-local function startFly()
-    local player = game.Players.LocalPlayer
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
+    if not hrp then return end
 
-    bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    bodyVelocity.Velocity = Vector3.zero
-    bodyVelocity.Parent = hrp
+    -- RIVALS CFrame Fly 작동
+    if Toggles and Toggles.FlyToggle and Toggles.FlyToggle.Value then
+        local flySpeed = Options.FlySpeedSlider.Value
+        local moveDir = Vector3.zero
 
-    bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-    bodyGyro.CFrame = hrp.CFrame
-    bodyGyro.Parent = hrp
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
 
-    flying = true
-
-    task.spawn(function()
-        while flying and Toggles.FlyToggle.Value do
-            local camera = workspace.CurrentCamera
-            local flySpeed = Options.FlySpeedSlider.Value
-            local moveDir = Vector3.zero
-
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + camera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - camera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - camera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + camera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
-
-            bodyGyro.CFrame = camera.CFrame
-            bodyVelocity.Velocity = moveDir * flySpeed
-            RunService.RenderStepped:Wait()
+        if moveDir.Magnitude > 0 then
+            hrp.CFrame = hrp.CFrame + (moveDir.Unit * flySpeed * delta)
         end
+        hrp.AssemblyLinearVelocity = Vector3.zero
 
-        if bodyVelocity then bodyVelocity:Destroy() end
-        if bodyGyro then bodyGyro:Destroy() end
-        flying = false
-    end)
-end
-
-Toggles.FlyToggle:OnChanged(function(Value)
-    if Value then
-        startFly()
-    else
-        flying = false
-        if bodyVelocity then bodyVelocity:Destroy() end
-        if bodyGyro then bodyGyro:Destroy() end
-    end
-end)
-
--- 캐릭터 리스폰 대응 (속도 / 점프력 유지)
-game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
-    local humanoid = char:WaitForChild("Humanoid")
-    task.wait(0.5)
-    if Options and Options.WalkSpeedSlider then
-        humanoid.WalkSpeed = Options.WalkSpeedSlider.Value
-    end
-    if Options and Options.JumpPowerSlider then
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = Options.JumpPowerSlider.Value
+    -- 일반 이동 속도 증폭 (CFrame Boost)
+    elseif Options and Options.WalkSpeedSlider and Options.WalkSpeedSlider.Value > 16 then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum and hum.MoveDirection.Magnitude > 0 then
+            local speedMultiplier = (Options.WalkSpeedSlider.Value - 16) / 10
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * speedMultiplier * delta * 10)
+        end
     end
 end)
