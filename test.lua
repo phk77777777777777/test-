@@ -936,3 +936,120 @@ end
         end)
     end)
 end)
+
+-- Tabs.Main에 Aimbot 그룹박스 생성
+local AimbotGroup = Tabs.Main:AddLeftGroupbox('에임봇 (Aimbot)')
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 1. FOV Circle UI 생성
+local FOVGui = Instance.new("ScreenGui")
+FOVGui.Name = "HoNyangFOV"
+FOVGui.ResetOnSpawn = false
+FOVGui.Parent = PlayerGui
+
+local FOVFrame = Instance.new("Frame", FOVGui)
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Visible = false
+
+local UICorner = Instance.new("UICorner", FOVFrame)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+local FOVStroke = Instance.new("UIStroke", FOVFrame)
+FOVStroke.Thickness = 2
+
+-- FOV 무지개 색상 애니메이션
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue + 2) % 360
+    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+end)
+
+-- 2. UI 조작 컨트롤러 (Toggles / Options)
+AimbotGroup:AddToggle('AimbotToggle', {
+    Text = '에임봇 활성화 (Aimbot)',
+    Default = false,
+    Tooltip = 'FOV 범위 내 가장 가까운 적에게 에임을 고정합니다.'
+})
+
+AimbotGroup:AddToggle('ShowFOVToggle', {
+    Text = 'FOV 원 표시',
+    Default = false,
+    Callback = function(Value)
+        FOVFrame.Visible = Value
+    end
+})
+
+AimbotGroup:AddSlider('FOVSlider', {
+    Text = 'FOV 크기',
+    Default = 150,
+    Min = 50,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(Value)
+        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
+    end
+})
+
+-- 초기 FOV 크기 설정
+FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
+
+-- 3. 에임봇 타겟팅 및 카메라 고정 로직
+RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
+    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
+    
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local currentFOV = Options.FOVSlider.Value
+    local nearestTarget = nil
+    local shortestDistance = math.huge
+    
+    -- NPC 탐색
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Humanoid") and obj.Health > 0 then
+            local model = obj.Parent
+            if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
+                local head = model:FindFirstChild("Head")
+                if head then
+                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    if onScreen and distance <= currentFOV and distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestTarget = head
+                    end
+                end
+            end
+        end
+    end
+    
+    -- 플레이어 탐색
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local enemyChar = player.Character
+            if enemyChar:FindFirstChildOfClass("ForceField") or (tick() - (player:GetAttribute("SpawnTime") or 0) < 1.5) then continue end
+
+            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+            local linkHead = enemyChar:FindFirstChild("Head")
+            if humanoid and humanoid.Health > 0 and linkHead then
+                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if onScreen and distance <= currentFOV and distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestTarget = linkHead
+                end
+            end
+        end
+    end
+    
+    -- 타겟 방향으로 카메라 CFrame 고정
+    if nearestTarget then
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
+    end
+end)
