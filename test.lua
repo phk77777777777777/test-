@@ -356,9 +356,9 @@ end
 local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
 MainGroup:AddToggle('Ragebot', {
-    Text = 'Enable Ragebot',
+    Text = 'Ragebot',
     Default = false,
-    Tooltip = 'Ragebot 기능 및 크로스헤어 UI를 활성화합니다.',
+    Tooltip = 'Ragebot enabled',
     Callback = function(Value)
         if getgenv().__s9t0u1 and getgenv().__s9t0u1.SetState then
             getgenv().__s9t0u1:SetState(Value)
@@ -938,7 +938,7 @@ end
 end)
 
 -- Tabs.Main에 Aimbot 그룹박스 생성
-local AimbotGroup = Tabs.Main:AddLeftGroupbox('에임봇 (Aimbot)')
+local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -973,13 +973,13 @@ end)
 
 -- 2. UI 조작 컨트롤러 (Toggles / Options)
 AimbotGroup:AddToggle('AimbotToggle', {
-    Text = '에임봇 활성화 (Aimbot)',
+    Text = 'Aimbot enabled',
     Default = false,
-    Tooltip = 'FOV 범위 내 가장 가까운 적에게 에임을 고정합니다.'
+    Tooltip = 'aimbot enabled'
 })
 
 AimbotGroup:AddToggle('ShowFOVToggle', {
-    Text = 'FOV 원 표시',
+    Text = 'FOV',
     Default = false,
     Callback = function(Value)
         FOVFrame.Visible = Value
@@ -987,7 +987,7 @@ AimbotGroup:AddToggle('ShowFOVToggle', {
 })
 
 AimbotGroup:AddSlider('FOVSlider', {
-    Text = 'FOV 크기',
+    Text = 'FOV size',
     Default = 150,
     Min = 50,
     Max = 500,
@@ -1052,4 +1052,84 @@ RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 
     if nearestTarget then
         Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
     end
+end)
+
+-- Tabs.Main에 Tracer 그룹박스 생성
+local TracerGroup = Tabs.Main:AddLeftGroupbox('총알 궤적 (Tracer Effect)')
+
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. UI 컨트롤러 생성
+TracerGroup:AddToggle('TracerToggle', {
+    Text = '궤적 이펙트 (Bullet Tracer)',
+    Default = false,
+    Tooltip = '총을 쏠 때 총알의 이동 궤적에 붉은 선을 생성합니다.'
+})
+
+TracerGroup:AddSlider('TracerLifetime', {
+    Text = '궤적 유지 시간(초)',
+    Default = 1,
+    Min = 0.1,
+    Max = 3,
+    Rounding = 1
+})
+
+-- 2. 궤적 생성 함수 (Beam/Line)
+local function createTracer(origin, targetPos)
+    if not (Toggles and Toggles.TracerToggle and Toggles.TracerToggle.Value) then return end
+
+    -- 시작점 및 끝점 Attachment 생성
+    local att0 = Instance.new("Attachment")
+    att0.WorldPosition = origin
+    att0.Parent = Workspace.Terrain
+
+    local att1 = Instance.new("Attachment")
+    att1.WorldPosition = targetPos
+    att1.Parent = Workspace.Terrain
+
+    -- 붉은색 Beam 생성
+    local beam = Instance.new("Beam")
+    beam.Attachment0 = att0
+    beam.Attachment1 = att1
+    beam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0)) -- 이미지와 같은 붉은색
+    beam.FaceCamera = true
+    beam.Width0 = 0.15
+    beam.Width1 = 0.15
+    beam.Material = Enum.Material.Neon
+    beam.Parent = Workspace.Terrain
+
+    -- 서서히 사라지는 투명도 애니메이션 (Fade Out)
+    local lifetime = Options and Options.TracerLifetime and Options.TracerLifetime.Value or 1
+    local tweenInfo = TweenInfo.new(lifetime, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(beam, tweenInfo, {Transparency = NumberSequence.new(1)})
+
+    tween:Play()
+
+    -- 시간 종료 후 객체 제거
+    task.delay(lifetime, function()
+        beam:Destroy()
+        att0:Destroy()
+        att1:Destroy()
+    end)
+end
+
+-- 3. 총기 발사 감지 및 궤적 연결 (Raycast & Camera/Mouse Point)
+local Mouse = LocalPlayer:GetMouse()
+
+-- 클릭 시 사격 위치 추적하여 궤적 생성
+Mouse.Button1Down:Connect(function()
+    if not (Toggles and Toggles.TracerToggle and Toggles.TracerToggle.Value) then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    -- 총구 위치 추적 (캐릭터 내 무기 Part 또는 카메라 위치)
+    local origin = char:FindFirstChild("Head") and char.Head.Position or Workspace.CurrentCamera.CFrame.Position
+    local targetPos = Mouse.Hit.Position
+
+    -- 궤적 그리기
+    createTracer(origin, targetPos)
 end)
