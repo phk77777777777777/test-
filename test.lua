@@ -65,7 +65,7 @@ RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
 RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
 RageTextLabel.BackgroundTransparency = 1
-RageTextLabel.Text = "ragebot"
+RageTextLabel.Text = "regebot.hoyang😊"
 RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 RageTextLabel.TextStrokeTransparency = 0
 RageTextLabel.Font = Enum.Font.GothamBold
@@ -351,7 +351,7 @@ do
 end
 
 -- ==========================================
--- 1. Main 탭 설정 (Ragebot & No Cooldown)
+-- 1. Main 탭 설정 (Combat & Aimbot)
 -- ==========================================
 local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
@@ -411,6 +411,112 @@ MainGroup:AddToggle('RivalsNoCDToggle', {
         end
     end
 })
+
+-- Aimbot 그룹박스
+local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
+
+local Camera = workspace.CurrentCamera
+
+-- FOV Circle UI 생성
+local FOVGui = Instance.new("ScreenGui")
+FOVGui.Name = "HoNyangFOV"
+FOVGui.ResetOnSpawn = false
+FOVGui.Parent = PlayerGui
+
+local FOVFrame = Instance.new("Frame", FOVGui)
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Visible = false
+
+local UICorner = Instance.new("UICorner", FOVFrame)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+local FOVStroke = Instance.new("UIStroke", FOVFrame)
+FOVStroke.Thickness = 2
+
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue + 2) % 360
+    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+end)
+
+AimbotGroup:AddToggle('AimbotToggle', {
+    Text = 'Aimbot enabled',
+    Default = false,
+    Tooltip = 'aimbot enabled'
+})
+
+AimbotGroup:AddToggle('ShowFOVToggle', {
+    Text = 'FOV',
+    Default = false,
+    Callback = function(Value)
+        FOVFrame.Visible = Value
+    end
+})
+
+AimbotGroup:AddSlider('FOVSlider', {
+    Text = 'FOV size',
+    Default = 150,
+    Min = 50,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(Value)
+        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
+    end
+})
+
+FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
+
+RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
+    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
+    
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local currentFOV = Options.FOVSlider.Value
+    local nearestTarget = nil
+    local shortestDistance = math.huge
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Humanoid") and obj.Health > 0 then
+            local model = obj.Parent
+            if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
+                local head = model:FindFirstChild("Head")
+                if head then
+                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    if onScreen and distance <= currentFOV and distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestTarget = head
+                    end
+                end
+            end
+        end
+    end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local enemyChar = player.Character
+            if enemyChar:FindFirstChildOfClass("ForceField") or (tick() - (player:GetAttribute("SpawnTime") or 0) < 1.5) then continue end
+
+            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+            local linkHead = enemyChar:FindFirstChild("Head")
+            if humanoid and humanoid.Health > 0 and linkHead then
+                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if onScreen and distance <= currentFOV and distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestTarget = linkHead
+                end
+            end
+        end
+    end
+    
+    if nearestTarget then
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
+    end
+end)
 
 -- ==========================================
 -- 2. Visuals 탭 (ESP & Skybox)
@@ -513,7 +619,6 @@ Group:AddButton({
     DoubleClick = false,
     Tooltip = '선택한 디바이스 신호를 서버로 즉시 재전송합니다.'
 })
-
 
 -- ==========================================
 -- 4. ESP Render Loop
@@ -654,7 +759,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. Skin Changer (Misc 탭)
+-- Skin Changer (Misc 탭)
 local SkinBox = Tabs.Misc:AddRightGroupbox('Skin Changer')
 SkinBox:AddButton('Unlock All', function()
     task.spawn(function()
@@ -917,7 +1022,7 @@ if ClientEntity and ClientEntity.ReplicateFromServer then
             if isOurKill and lastUsedWeapon and equipped[lastUsedWeapon] and equipped[lastUsedWeapon].Finisher then
                 local finisherData = equipped[lastUsedWeapon].Finisher
                 local finisherEnum = finisherData.Enum                
-                if not finisherEnum and EnumLibrary then
+                if not finisherEnum and EnumLibrary me
                     local ok, result = pcall(EnumLibrary.ToEnum, EnumLibrary, finisherData.Name)
                     if ok and result then finisherEnum = result end
                 end                
@@ -935,337 +1040,4 @@ end
             Library:Notify("Skin unlock complete!", 3)
         end)
     end)
-end)
-
--- Tabs.Main에 Aimbot 그룹박스 생성
-local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
--- 1. FOV Circle UI 생성
-local FOVGui = Instance.new("ScreenGui")
-FOVGui.Name = "HoNyangFOV"
-FOVGui.ResetOnSpawn = false
-FOVGui.Parent = PlayerGui
-
-local FOVFrame = Instance.new("Frame", FOVGui)
-FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-FOVFrame.BackgroundTransparency = 1
-FOVFrame.Visible = false
-
-local UICorner = Instance.new("UICorner", FOVFrame)
-UICorner.CornerRadius = UDim.new(1, 0)
-
-local FOVStroke = Instance.new("UIStroke", FOVFrame)
-FOVStroke.Thickness = 2
-
--- FOV 무지개 색상 애니메이션
-local hue = 0
-RunService.RenderStepped:Connect(function()
-    hue = (hue + 2) % 360
-    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
-end)
-
--- 2. UI 조작 컨트롤러 (Toggles / Options)
-AimbotGroup:AddToggle('AimbotToggle', {
-    Text = 'Aimbot enabled',
-    Default = false,
-    Tooltip = 'aimbot enabled'
-})
-
-AimbotGroup:AddToggle('ShowFOVToggle', {
-    Text = 'FOV',
-    Default = false,
-    Callback = function(Value)
-        FOVFrame.Visible = Value
-    end
-})
-
-AimbotGroup:AddSlider('FOVSlider', {
-    Text = 'FOV size',
-    Default = 150,
-    Min = 50,
-    Max = 500,
-    Rounding = 0,
-    Callback = function(Value)
-        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
-    end
-})
-
--- 초기 FOV 크기 설정
-FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
-
--- 3. 에임봇 타겟팅 및 카메라 고정 로직
-RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
-    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
-    
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
-    local currentFOV = Options.FOVSlider.Value
-    local nearestTarget = nil
-    local shortestDistance = math.huge
-    
-    -- NPC 탐색
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Humanoid") and obj.Health > 0 then
-            local model = obj.Parent
-            if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
-                local head = model:FindFirstChild("Head")
-                if head then
-                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                    if onScreen and distance <= currentFOV and distance < shortestDistance then
-                        shortestDistance = distance
-                        nearestTarget = head
-                    end
-                end
-            end
-        end
-    end
-    
-    -- 플레이어 탐색
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local enemyChar = player.Character
-            if enemyChar:FindFirstChildOfClass("ForceField") or (tick() - (player:GetAttribute("SpawnTime") or 0) < 1.5) then continue end
-
-            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
-            local linkHead = enemyChar:FindFirstChild("Head")
-            if humanoid and humanoid.Health > 0 and linkHead then
-                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
-                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if onScreen and distance <= currentFOV and distance < shortestDistance then
-                    shortestDistance = distance
-                    nearestTarget = linkHead
-                end
-            end
-        end
-    end
-    
-    -- 타겟 방향으로 카메라 CFrame 고정
-    if nearestTarget then
-        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
-    end
-end)
-
--- Tabs.Rage (또는 필요시 Tabs.Main) 탭에 그룹박스 생성
-local RageGroup = Tabs.Main:RageAddLeftGroupbox('레이지봇 (Ragebot & Desync)')
-
-local Players = cloneref(game:GetService("Players"))
-local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
-local RunService = cloneref(game:GetService("RunService"))
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
--- 1. Ragebot 실행 UI (십자선 애니메이션 & 문구)
-local RageUIGui = Instance.new("ScreenGui")
-RageUIGui.Name = "HoNyangRageUI"
-RageUIGui.ResetOnSpawn = false
-RageUIGui.Parent = PlayerGui
-
-local CrosshairContainer = Instance.new("Frame", RageUIGui)
-CrosshairContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-CrosshairContainer.Position = UDim2.new(0.5, 0, 0.5, -35)
-CrosshairContainer.Size = UDim2.new(0, 40, 0, 40)
-CrosshairContainer.BackgroundTransparency = 1
-CrosshairContainer.Visible = false
-
-local lines = {
-    {Size = UDim2.new(0, 8, 0, 2), DefaultPos = UDim2.new(0, 0, 0.5, -1)},
-    {Size = UDim2.new(0, 8, 0, 2), DefaultPos = UDim2.new(1, -8, 0.5, -1)},
-    {Size = UDim2.new(0, 2, 0, 8), DefaultPos = UDim2.new(0.5, -1, 0, 0)},
-    {Size = UDim2.new(0, 2, 0, 8), DefaultPos = UDim2.new(0.5, -1, 1, -8)}
-}
-
-local crosshairLines = {}
-for _, info in ipairs(lines) do
-    local line = Instance.new("Frame", CrosshairContainer)
-    line.Size = info.Size
-    line.Position = info.DefaultPos
-    line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    line.BorderSizePixel = 0
-    table.insert(crosshairLines, {Line = line, DefaultPos = info.DefaultPos})
-end
-
-local RageTextLabel = Instance.new("TextLabel", RageUIGui)
-RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
-RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
-RageTextLabel.BackgroundTransparency = 1
-RageTextLabel.Text = "regebot.hoyang😊"
-RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-RageTextLabel.TextStrokeTransparency = 0
-RageTextLabel.Font = Enum.Font.GothamBold
-RageTextLabel.TextSize = 13
-RageTextLabel.TextXAlignment = Enum.TextXAlignment.Center
-RageTextLabel.Visible = false
-
--- UI 무지개/회전 애니메이션
-local rageHue = 0
-local rotAngle = 0
-RunService.RenderStepped:Connect(function()
-    local isEnabled = Toggles and Toggles.RagebotToggle and Toggles.RagebotToggle.Value
-    CrosshairContainer.Visible = isEnabled
-    RageTextLabel.Visible = isEnabled
-
-    if isEnabled then
-        rageHue = (rageHue + 2) % 360
-        local rainbowColor = Color3.fromHSV(rageHue / 360, 1, 1)
-        for _, item in ipairs(crosshairLines) do
-            item.Line.BackgroundColor3 = rainbowColor
-        end
-        RageTextLabel.TextColor3 = rainbowColor
-
-        rotAngle = (rotAngle + 4) % 360
-        CrosshairContainer.Rotation = rotAngle
-
-        local timeVal = tick() * 5
-        local pulse = (math.sin(timeVal) + 1) * 0.5 
-        
-        crosshairLines[1].Line.Position = UDim2.new(0, math.floor(3 + pulse * 6), 0.5, -1)
-        crosshairLines[2].Line.Position = UDim2.new(1, math.floor(-11 - pulse * 6), 0.5, -1)
-        crosshairLines[3].Line.Position = UDim2.new(0.5, -1, 0, math.floor(3 + pulse * 6))
-        crosshairLines[4].Line.Position = UDim2.new(0.5, -1, 1, math.floor(-11 - pulse * 6))
-    end
-end)
-
--- 2. LinoriaLib UI 컨트롤러 생성
-RageGroup:AddToggle('RagebotToggle', {
-    Text = '레이지봇 활성화 (Ragebot)',
-    Default = false,
-    Tooltip = 'Desync 패킷 및 자동 공격 시스템을 켭니다.'
-})
-
-RageGroup:AddSlider('RageFireRate', {
-    Text = '공격 딜레이 (초)',
-    Default = 0.05,
-    Min = 0.01,
-    Max = 0.5,
-    Rounding = 2
-})
-
--- 3. 가장 가까운 타겟 탐색 함수 (Helper)
-local function getClosestTarget()
-    local closestPlayer = nil
-    local targetRoot = nil
-    local targetHead = nil
-    local shortestDistance = math.huge
-
-    local myChar = LocalPlayer.Character
-    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return nil, nil, nil end
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local enemyChar = player.Character
-            local hum = enemyChar:FindFirstChildOfClass("Humanoid")
-            local head = enemyChar:FindFirstChild("Head")
-            local root = enemyChar:FindFirstChild("HumanoidRootPart")
-
-            if hum and hum.Health > 0 and head and root then
-                local dist = (root.Position - myRoot.Position).Magnitude
-                if dist < shortestDistance then
-                    shortestDistance = dist
-                    closestPlayer = player
-                    targetRoot = root
-                    targetHead = head
-                end
-            end
-        end
-    end
-
-    return closestPlayer, targetRoot, targetHead
-end
-
--- 4. Ragebot 모듈 불러오기 & 메커니즘
-local __util, __enum, __FighterController
-pcall(function()
-    __util = require(ReplicatedStorage.Modules.Utility)
-    __enum = require(ReplicatedStorage.Modules.EnumLibrary)
-    __FighterController = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
-end)
-
-local __lastFire = 0
-
-RunService.Heartbeat:Connect(function()
-    if not (Toggles and Toggles.RagebotToggle and Toggles.RagebotToggle.Value) then return end
-    
-    local targetPlayer, targetRoot, targetHead = getClosestTarget()
-    local desyncCF = nil
-    
-    -- [Desync 로직] 타겟 주변 회전 위치 연산
-    if targetRoot and targetHead then
-        local t = tick() * 12
-        local offsetX = math.sin(t) * 3
-        local offsetZ = -4 + (math.cos(t) * 1)
-        local desyncPos = (targetRoot.CFrame * CFrame.new(offsetX, 0.5, offsetZ)).Position
-        desyncCF = CFrame.lookAt(desyncPos, targetHead.Position)
-    end
-
-    -- [Desync 적용 및 CFrame 순간 복원]
-    if desyncCF and LocalPlayer.Character then
-        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if myRoot then
-            local oldCF = myRoot.CFrame
-            local oldVel = myRoot.Velocity
-            local oldRotVel = myRoot.RotVelocity
-            
-            myRoot.CFrame = desyncCF
-            
-            RunService:BindToRenderStep("__restore", 101, function()
-                if myRoot then
-                    myRoot.CFrame = oldCF
-                    myRoot.Velocity = oldVel
-                    myRoot.RotVelocity = oldRotVel
-                end
-                RunService:UnbindFromRenderStep("__restore")
-            end)
-        end
-    end
-
-    if not targetPlayer or not targetHead or not targetRoot then return end
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-    if not __FighterController or not __FighterController.LocalFighter then return end
-    local item = __FighterController.LocalFighter.EquippedItem
-    if not item then return end
-
-    local fireDelay = Options and Options.RageFireRate and Options.RageFireRate.Value or 0.05
-    if tick() - __lastFire < fireDelay then return end
-    __lastFire = tick()
-
-    -- [Ragebot 패킷 생성 및 리모트 발송]
-    if __util and __enum then
-        local originPos = desyncCF and desyncCF.Position or targetRoot.Position
-        local targetPos = targetHead.Position
-        local aimCF = CFrame.lookAt(originPos, targetPos)
-        local targetCF = targetHead.CFrame
-        local randomOffset = Vector3.new(
-            (math.random() - 0.5) * 0.1,
-            (math.random() - 0.5) * 0.1,
-            (math.random() - 0.5) * 0.1
-        )
-        local aimedPos = targetPos + randomOffset
-        local objSpaceHeadOffset = targetHead.CFrame:ToObjectSpace(CFrame.new(aimedPos))
-        
-        local cameradata = {}
-        cameradata[utf8.char(1)] = {
-            [utf8.char(0)] = __util:EncodeCFrame(aimCF),
-            [utf8.char(1)] = __util:EncodeCFrame(targetCF),
-            [utf8.char(2)] = targetHead,
-            [utf8.char(3)] = __util:EncodeCFrame(objSpaceHeadOffset)
-        }
-        
-        ReplicatedStorage.Remotes.Replication.Fighter.UseItem:FireServer(
-            item:Get("ObjectID"),
-            __enum:ToEnum("StartShooting"),
-            cameradata,
-            nil
-        )
-    end
 end)
