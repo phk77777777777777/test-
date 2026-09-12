@@ -369,9 +369,9 @@ MainGroup:AddToggle('Ragebot', {
 local originalWeaponValues = {}
 
 MainGroup:AddToggle('RivalsNoCDToggle', {
-    Text = 'Triggerbot',
+    Text = 'No Cooldown',
     Default = false,
-    Tooltip = 'Triggerbot',
+    Tooltip = 'No Cooldown',
     Callback = function(Value)
         getgenv().RivalsNoCD = Value
         if Value then
