@@ -1054,82 +1054,218 @@ RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 
     end
 end)
 
--- Tabs.Main에 Tracer 그룹박스 생성
-local TracerGroup = Tabs.Main:AddLeftGroupbox('총알 궤적 (Tracer Effect)')
+-- Tabs.Rage (또는 필요시 Tabs.Main) 탭에 그룹박스 생성
+local RageGroup = Tabs.Main:RageAddLeftGroupbox('레이지봇 (Ragebot & Desync)')
 
-local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
+local Players = cloneref(game:GetService("Players"))
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
+local RunService = cloneref(game:GetService("RunService"))
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- 1. UI 컨트롤러 생성
-TracerGroup:AddToggle('TracerToggle', {
-    Text = '궤적 이펙트 (Bullet Tracer)',
-    Default = false,
-    Tooltip = '총을 쏠 때 총알의 이동 궤적에 붉은 선을 생성합니다.'
-})
+-- 1. Ragebot 실행 UI (십자선 애니메이션 & 문구)
+local RageUIGui = Instance.new("ScreenGui")
+RageUIGui.Name = "HoNyangRageUI"
+RageUIGui.ResetOnSpawn = false
+RageUIGui.Parent = PlayerGui
 
-TracerGroup:AddSlider('TracerLifetime', {
-    Text = '궤적 유지 시간(초)',
-    Default = 1,
-    Min = 0.1,
-    Max = 3,
-    Rounding = 1
-})
+local CrosshairContainer = Instance.new("Frame", RageUIGui)
+CrosshairContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+CrosshairContainer.Position = UDim2.new(0.5, 0, 0.5, -35)
+CrosshairContainer.Size = UDim2.new(0, 40, 0, 40)
+CrosshairContainer.BackgroundTransparency = 1
+CrosshairContainer.Visible = false
 
--- 2. 궤적 생성 함수 (Beam/Line)
-local function createTracer(origin, targetPos)
-    if not (Toggles and Toggles.TracerToggle and Toggles.TracerToggle.Value) then return end
+local lines = {
+    {Size = UDim2.new(0, 8, 0, 2), DefaultPos = UDim2.new(0, 0, 0.5, -1)},
+    {Size = UDim2.new(0, 8, 0, 2), DefaultPos = UDim2.new(1, -8, 0.5, -1)},
+    {Size = UDim2.new(0, 2, 0, 8), DefaultPos = UDim2.new(0.5, -1, 0, 0)},
+    {Size = UDim2.new(0, 2, 0, 8), DefaultPos = UDim2.new(0.5, -1, 1, -8)}
+}
 
-    -- 시작점 및 끝점 Attachment 생성
-    local att0 = Instance.new("Attachment")
-    att0.WorldPosition = origin
-    att0.Parent = Workspace.Terrain
-
-    local att1 = Instance.new("Attachment")
-    att1.WorldPosition = targetPos
-    att1.Parent = Workspace.Terrain
-
-    -- 붉은색 Beam 생성
-    local beam = Instance.new("Beam")
-    beam.Attachment0 = att0
-    beam.Attachment1 = att1
-    beam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0)) -- 이미지와 같은 붉은색
-    beam.FaceCamera = true
-    beam.Width0 = 0.15
-    beam.Width1 = 0.15
-    beam.Material = Enum.Material.Neon
-    beam.Parent = Workspace.Terrain
-
-    -- 서서히 사라지는 투명도 애니메이션 (Fade Out)
-    local lifetime = Options and Options.TracerLifetime and Options.TracerLifetime.Value or 1
-    local tweenInfo = TweenInfo.new(lifetime, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(beam, tweenInfo, {Transparency = NumberSequence.new(1)})
-
-    tween:Play()
-
-    -- 시간 종료 후 객체 제거
-    task.delay(lifetime, function()
-        beam:Destroy()
-        att0:Destroy()
-        att1:Destroy()
-    end)
+local crosshairLines = {}
+for _, info in ipairs(lines) do
+    local line = Instance.new("Frame", CrosshairContainer)
+    line.Size = info.Size
+    line.Position = info.DefaultPos
+    line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    line.BorderSizePixel = 0
+    table.insert(crosshairLines, {Line = line, DefaultPos = info.DefaultPos})
 end
 
--- 3. 총기 발사 감지 및 궤적 연결 (Raycast & Camera/Mouse Point)
-local Mouse = LocalPlayer:GetMouse()
+local RageTextLabel = Instance.new("TextLabel", RageUIGui)
+RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
+RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
+RageTextLabel.BackgroundTransparency = 1
+RageTextLabel.Text = "regebot.hoyang😊"
+RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+RageTextLabel.TextStrokeTransparency = 0
+RageTextLabel.Font = Enum.Font.GothamBold
+RageTextLabel.TextSize = 13
+RageTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+RageTextLabel.Visible = false
 
--- 클릭 시 사격 위치 추적하여 궤적 생성
-Mouse.Button1Down:Connect(function()
-    if not (Toggles and Toggles.TracerToggle and Toggles.TracerToggle.Value) then return end
+-- UI 무지개/회전 애니메이션
+local rageHue = 0
+local rotAngle = 0
+RunService.RenderStepped:Connect(function()
+    local isEnabled = Toggles and Toggles.RagebotToggle and Toggles.RagebotToggle.Value
+    CrosshairContainer.Visible = isEnabled
+    RageTextLabel.Visible = isEnabled
 
-    local char = LocalPlayer.Character
-    if not char then return end
+    if isEnabled then
+        rageHue = (rageHue + 2) % 360
+        local rainbowColor = Color3.fromHSV(rageHue / 360, 1, 1)
+        for _, item in ipairs(crosshairLines) do
+            item.Line.BackgroundColor3 = rainbowColor
+        end
+        RageTextLabel.TextColor3 = rainbowColor
 
-    -- 총구 위치 추적 (캐릭터 내 무기 Part 또는 카메라 위치)
-    local origin = char:FindFirstChild("Head") and char.Head.Position or Workspace.CurrentCamera.CFrame.Position
-    local targetPos = Mouse.Hit.Position
+        rotAngle = (rotAngle + 4) % 360
+        CrosshairContainer.Rotation = rotAngle
 
-    -- 궤적 그리기
-    createTracer(origin, targetPos)
+        local timeVal = tick() * 5
+        local pulse = (math.sin(timeVal) + 1) * 0.5 
+        
+        crosshairLines[1].Line.Position = UDim2.new(0, math.floor(3 + pulse * 6), 0.5, -1)
+        crosshairLines[2].Line.Position = UDim2.new(1, math.floor(-11 - pulse * 6), 0.5, -1)
+        crosshairLines[3].Line.Position = UDim2.new(0.5, -1, 0, math.floor(3 + pulse * 6))
+        crosshairLines[4].Line.Position = UDim2.new(0.5, -1, 1, math.floor(-11 - pulse * 6))
+    end
+end)
+
+-- 2. LinoriaLib UI 컨트롤러 생성
+RageGroup:AddToggle('RagebotToggle', {
+    Text = '레이지봇 활성화 (Ragebot)',
+    Default = false,
+    Tooltip = 'Desync 패킷 및 자동 공격 시스템을 켭니다.'
+})
+
+RageGroup:AddSlider('RageFireRate', {
+    Text = '공격 딜레이 (초)',
+    Default = 0.05,
+    Min = 0.01,
+    Max = 0.5,
+    Rounding = 2
+})
+
+-- 3. 가장 가까운 타겟 탐색 함수 (Helper)
+local function getClosestTarget()
+    local closestPlayer = nil
+    local targetRoot = nil
+    local targetHead = nil
+    local shortestDistance = math.huge
+
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil, nil, nil end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local enemyChar = player.Character
+            local hum = enemyChar:FindFirstChildOfClass("Humanoid")
+            local head = enemyChar:FindFirstChild("Head")
+            local root = enemyChar:FindFirstChild("HumanoidRootPart")
+
+            if hum and hum.Health > 0 and head and root then
+                local dist = (root.Position - myRoot.Position).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    closestPlayer = player
+                    targetRoot = root
+                    targetHead = head
+                end
+            end
+        end
+    end
+
+    return closestPlayer, targetRoot, targetHead
+end
+
+-- 4. Ragebot 모듈 불러오기 & 메커니즘
+local __util, __enum, __FighterController
+pcall(function()
+    __util = require(ReplicatedStorage.Modules.Utility)
+    __enum = require(ReplicatedStorage.Modules.EnumLibrary)
+    __FighterController = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
+end)
+
+local __lastFire = 0
+
+RunService.Heartbeat:Connect(function()
+    if not (Toggles and Toggles.RagebotToggle and Toggles.RagebotToggle.Value) then return end
+    
+    local targetPlayer, targetRoot, targetHead = getClosestTarget()
+    local desyncCF = nil
+    
+    -- [Desync 로직] 타겟 주변 회전 위치 연산
+    if targetRoot and targetHead then
+        local t = tick() * 12
+        local offsetX = math.sin(t) * 3
+        local offsetZ = -4 + (math.cos(t) * 1)
+        local desyncPos = (targetRoot.CFrame * CFrame.new(offsetX, 0.5, offsetZ)).Position
+        desyncCF = CFrame.lookAt(desyncPos, targetHead.Position)
+    end
+
+    -- [Desync 적용 및 CFrame 순간 복원]
+    if desyncCF and LocalPlayer.Character then
+        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if myRoot then
+            local oldCF = myRoot.CFrame
+            local oldVel = myRoot.Velocity
+            local oldRotVel = myRoot.RotVelocity
+            
+            myRoot.CFrame = desyncCF
+            
+            RunService:BindToRenderStep("__restore", 101, function()
+                if myRoot then
+                    myRoot.CFrame = oldCF
+                    myRoot.Velocity = oldVel
+                    myRoot.RotVelocity = oldRotVel
+                end
+                RunService:UnbindFromRenderStep("__restore")
+            end)
+        end
+    end
+
+    if not targetPlayer or not targetHead or not targetRoot then return end
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    if not __FighterController or not __FighterController.LocalFighter then return end
+    local item = __FighterController.LocalFighter.EquippedItem
+    if not item then return end
+
+    local fireDelay = Options and Options.RageFireRate and Options.RageFireRate.Value or 0.05
+    if tick() - __lastFire < fireDelay then return end
+    __lastFire = tick()
+
+    -- [Ragebot 패킷 생성 및 리모트 발송]
+    if __util and __enum then
+        local originPos = desyncCF and desyncCF.Position or targetRoot.Position
+        local targetPos = targetHead.Position
+        local aimCF = CFrame.lookAt(originPos, targetPos)
+        local targetCF = targetHead.CFrame
+        local randomOffset = Vector3.new(
+            (math.random() - 0.5) * 0.1,
+            (math.random() - 0.5) * 0.1,
+            (math.random() - 0.5) * 0.1
+        )
+        local aimedPos = targetPos + randomOffset
+        local objSpaceHeadOffset = targetHead.CFrame:ToObjectSpace(CFrame.new(aimedPos))
+        
+        local cameradata = {}
+        cameradata[utf8.char(1)] = {
+            [utf8.char(0)] = __util:EncodeCFrame(aimCF),
+            [utf8.char(1)] = __util:EncodeCFrame(targetCF),
+            [utf8.char(2)] = targetHead,
+            [utf8.char(3)] = __util:EncodeCFrame(objSpaceHeadOffset)
+        }
+        
+        ReplicatedStorage.Remotes.Replication.Fighter.UseItem:FireServer(
+            item:Get("ObjectID"),
+            __enum:ToEnum("StartShooting"),
+            cameradata,
+            nil
+        )
+    end
 end)
