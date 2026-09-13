@@ -65,7 +65,7 @@ RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
 RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
 RageTextLabel.BackgroundTransparency = 1
-RageTextLabel.Text = "regebot.hoyang😊"
+RageTextLabel.Text = "ragebot"
 RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 RageTextLabel.TextStrokeTransparency = 0
 RageTextLabel.Font = Enum.Font.GothamBold
@@ -351,7 +351,7 @@ do
 end
 
 -- ==========================================
--- 1. Main 탭 설정 (Combat & Aimbot)
+-- 1. Main 탭 설정 (Ragebot & No Cooldown)
 -- ==========================================
 local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
@@ -369,9 +369,9 @@ MainGroup:AddToggle('Ragebot', {
 local originalWeaponValues = {}
 
 MainGroup:AddToggle('RivalsNoCDToggle', {
-    Text = 'No Cooldown',
+    Text = 'Triggerbot',
     Default = false,
-    Tooltip = 'No Cooldown',
+    Tooltip = 'Triggerbot',
     Callback = function(Value)
         getgenv().RivalsNoCD = Value
         if Value then
@@ -411,112 +411,6 @@ MainGroup:AddToggle('RivalsNoCDToggle', {
         end
     end
 })
-
--- Aimbot 그룹박스
-local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
-
-local Camera = workspace.CurrentCamera
-
--- FOV Circle UI 생성
-local FOVGui = Instance.new("ScreenGui")
-FOVGui.Name = "HoNyangFOV"
-FOVGui.ResetOnSpawn = false
-FOVGui.Parent = PlayerGui
-
-local FOVFrame = Instance.new("Frame", FOVGui)
-FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-FOVFrame.BackgroundTransparency = 1
-FOVFrame.Visible = false
-
-local UICorner = Instance.new("UICorner", FOVFrame)
-UICorner.CornerRadius = UDim.new(1, 0)
-
-local FOVStroke = Instance.new("UIStroke", FOVFrame)
-FOVStroke.Thickness = 2
-
-local hue = 0
-RunService.RenderStepped:Connect(function()
-    hue = (hue + 2) % 360
-    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
-end)
-
-AimbotGroup:AddToggle('AimbotToggle', {
-    Text = 'Aimbot enabled',
-    Default = false,
-    Tooltip = 'aimbot enabled'
-})
-
-AimbotGroup:AddToggle('ShowFOVToggle', {
-    Text = 'FOV',
-    Default = false,
-    Callback = function(Value)
-        FOVFrame.Visible = Value
-    end
-})
-
-AimbotGroup:AddSlider('FOVSlider', {
-    Text = 'FOV size',
-    Default = 150,
-    Min = 50,
-    Max = 500,
-    Rounding = 0,
-    Callback = function(Value)
-        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
-    end
-})
-
-FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
-
-RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
-    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
-    
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
-    local currentFOV = Options.FOVSlider.Value
-    local nearestTarget = nil
-    local shortestDistance = math.huge
-    
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Humanoid") and obj.Health > 0 then
-            local model = obj.Parent
-            if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
-                local head = model:FindFirstChild("Head")
-                if head then
-                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                    if onScreen and distance <= currentFOV and distance < shortestDistance then
-                        shortestDistance = distance
-                        nearestTarget = head
-                    end
-                end
-            end
-        end
-    end
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local enemyChar = player.Character
-            if enemyChar:FindFirstChildOfClass("ForceField") or (tick() - (player:GetAttribute("SpawnTime") or 0) < 1.5) then continue end
-
-            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
-            local linkHead = enemyChar:FindFirstChild("Head")
-            if humanoid and humanoid.Health > 0 and linkHead then
-                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
-                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if onScreen and distance <= currentFOV and distance < shortestDistance then
-                    shortestDistance = distance
-                    nearestTarget = linkHead
-                end
-            end
-        end
-    end
-    
-    if nearestTarget then
-        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
-    end
-end)
 
 -- ==========================================
 -- 2. Visuals 탭 (ESP & Skybox)
@@ -619,6 +513,7 @@ Group:AddButton({
     DoubleClick = false,
     Tooltip = '선택한 디바이스 신호를 서버로 즉시 재전송합니다.'
 })
+
 
 -- ==========================================
 -- 4. ESP Render Loop
@@ -759,7 +654,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Skin Changer (Misc 탭)
+-- 3. Skin Changer (Misc 탭)
 local SkinBox = Tabs.Misc:AddRightGroupbox('Skin Changer')
 SkinBox:AddButton('Unlock All', function()
     task.spawn(function()
@@ -1022,7 +917,7 @@ if ClientEntity and ClientEntity.ReplicateFromServer then
             if isOurKill and lastUsedWeapon and equipped[lastUsedWeapon] and equipped[lastUsedWeapon].Finisher then
                 local finisherData = equipped[lastUsedWeapon].Finisher
                 local finisherEnum = finisherData.Enum                
-                if not finisherEnum and EnumLibrary me
+                if not finisherEnum and EnumLibrary then
                     local ok, result = pcall(EnumLibrary.ToEnum, EnumLibrary, finisherData.Name)
                     if ok and result then finisherEnum = result end
                 end                
@@ -1038,6 +933,205 @@ end
 ]=]
             loadstring(scriptString)()
             Library:Notify("Skin unlock complete!", 3)
+        end)
+    end)
+end)
+
+-- Tabs.Main에 Aimbot 그룹박스 생성
+local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 1. FOV Circle UI 생성
+local FOVGui = Instance.new("ScreenGui")
+FOVGui.Name = "HoNyangFOV"
+FOVGui.ResetOnSpawn = false
+FOVGui.Parent = PlayerGui
+
+local FOVFrame = Instance.new("Frame", FOVGui)
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Visible = false
+
+local UICorner = Instance.new("UICorner", FOVFrame)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+local FOVStroke = Instance.new("UIStroke", FOVFrame)
+FOVStroke.Thickness = 2
+
+-- FOV 무지개 색상 애니메이션
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue + 2) % 360
+    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+end)
+
+-- 2. UI 조작 컨트롤러 (Toggles / Options)
+AimbotGroup:AddToggle('AimbotToggle', {
+    Text = 'Aimbot enabled',
+    Default = false,
+    Tooltip = 'aimbot enabled'
+})
+
+AimbotGroup:AddToggle('ShowFOVToggle', {
+    Text = 'FOV',
+    Default = false,
+    Callback = function(Value)
+        FOVFrame.Visible = Value
+    end
+})
+
+AimbotGroup:AddSlider('FOVSlider', {
+    Text = 'FOV size',
+    Default = 150,
+    Min = 50,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(Value)
+        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
+    end
+})
+
+-- 초기 FOV 크기 설정
+FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
+
+-- 3. 에임봇 타겟팅 및 카메라 고정 로직
+RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
+    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
+    
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local currentFOV = Options.FOVSlider.Value
+    local nearestTarget = nil
+    local shortestDistance = math.huge
+    
+    -- NPC 탐색
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Humanoid") and obj.Health > 0 then
+            local model = obj.Parent
+            if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
+                local head = model:FindFirstChild("Head")
+                if head then
+                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    if onScreen and distance <= currentFOV and distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestTarget = head
+                    end
+                end
+            end
+        end
+    end
+    
+    -- 플레이어 탐색
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local enemyChar = player.Character
+            if enemyChar:FindFirstChildOfClass("ForceField") or (tick() - (player:GetAttribute("SpawnTime") or 0) < 1.5) then continue end
+
+            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+            local linkHead = enemyChar:FindFirstChild("Head")
+            if humanoid and humanoid.Health > 0 and linkHead then
+                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if onScreen and distance <= currentFOV and distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestTarget = linkHead
+                end
+            end
+        end
+    end
+    
+    -- 타겟 방향으로 카메라 CFrame 고정
+    if nearestTarget then
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
+    end
+end)
+
+-- ==========================================
+-- Void Spam (보이드 스펨) 기능 구현
+-- ==========================================
+
+-- UI 슬라이더 및 토글 추가
+MainGroup:Tads.MainAddToggle('VoidSpamToggle', {
+    Text = 'Void Spam',
+    Default = false,
+    Tooltip = '캐릭터를 10,000스터드 격리시키고 설정 주기에 따라 순간 공격합니다.',
+    Callback = function(Value)
+        getgenv().VoidSpamEnabled = Value
+    end
+})
+
+MainGroup:AddSlider('VoidHideSlider', {
+    Text = 'Void Hide (공격 주기)',
+    Default = 0.1,
+    Min = 0.01,
+    Max = 1.0,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        getgenv().VoidHideValue = Value
+    end
+})
+
+-- 변수 초기화
+getgenv().VoidSpamEnabled = false
+getgenv().VoidHideValue = 0.1
+
+-- Void Spam 루프
+task.spawn(function()
+    local lastAttackTime = 0
+
+    RunService.Heartbeat:Connect(function()
+        if not getgenv().VoidSpamEnabled then return end
+
+        local char = LocalPlayer.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        -- 1. 기본 위치: 원래 위치에서 10,000스터드 위(보이드)로 고정
+        local originalCFrame = root.CFrame
+        local voidCFrame = originalCFrame + Vector3.new(0, 10000, 0)
+
+        -- 타겟 검색 (가장 가까운 적)
+        local targetPlayer = nil
+        if getgenv().__s9t0u1 and getgenv().__s9t0u1.__find then
+            targetPlayer = getgenv().__s9t0u1:__find()
+        end
+
+        local currentTime = tick()
+        local hideInterval = getgenv().VoidHideValue or 0.1
+
+        -- 2. VoidHide 주기에 도달했을 때만 순간적으로 적 위치로 이동
+        if targetPlayer and targetPlayer.Character and (currentTime - lastAttackTime >= hideInterval) then
+            local enemyHead = targetPlayer.Character:FindFirstChild("Head")
+            if enemyHead then
+                lastAttackTime = currentTime
+
+                -- 적 위치로 순간 이동
+                root.CFrame = enemyHead.CFrame
+
+                -- RenderStep을 사용하여 1프레임 동안 공격 신호를 남긴 후 보이드 위치로 복귀
+                RunService:BindToRenderStep("__void_restore", 1, function()
+                    root.CFrame = voidCFrame
+                    RunService:UnbindFromRenderStep("__void_restore")
+                end)
+                return
+            end
+        end
+
+        -- 공격 주기가 아닐 때는 항상 10,000스터드 먼 보이드 상태 유지
+        root.CFrame = voidCFrame
+        RunService:BindToRenderStep("__void_hold", 1, function()
+            root.CFrame = originalCFrame
+            RunService:UnbindFromRenderStep("__void_hold")
         end)
     end)
 end)
