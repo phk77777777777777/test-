@@ -1,7 +1,7 @@
 local repo = 'https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/'
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 
--- LinoriaLib 전역 객체 바인딩 (ESP 및 UI 상태 참조용)
+-- LinoriaLib 전역 객체 바인딩
 local Toggles = getgenv().Toggles or Library.Toggles
 local Options = getgenv().Options or Library.Options
 
@@ -99,31 +99,39 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ==========================================
--- Halmu Ragebot Engine & Remote Controller
+-- [요청 반영] Halmu-style Ragebot Engine
 -- ==========================================
 local _halmu = {
     rageEnabled = false,
+    desyncEnabled = false,
+    desyncDist = 3,
     currentTarget = nil,
-    targetPlayer = nil,
     rageConn = nil,
     findConn = nil,
+    RealCFrame = nil,
+    ready = false,
 }
 
 local FighterCtrl, EnumLib, useItemRemote, ssEnum
 
 task.spawn(function()
-    pcall(function()
-        FighterCtrl = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
+    local okF, fc = pcall(function()
+        return require(LocalPlayer.PlayerScripts.Controllers.FighterController)
     end)
-    pcall(function()
-        EnumLib = require(ReplicatedStorage.Modules.EnumLibrary)
+    if okF then FighterCtrl = fc end
+
+    local okE, el = pcall(function()
+        return require(ReplicatedStorage.Modules.EnumLibrary)
     end)
+    if okE then EnumLib = el end
+
     pcall(function()
         useItemRemote = ReplicatedStorage.Remotes.Replication.Fighter.UseItem
     end)
     pcall(function()
         if EnumLib then ssEnum = EnumLib:ToEnum("StartShooting") end
     end)
+    _halmu.ready = true
 end)
 
 local function isSameTeam(plr)
@@ -154,15 +162,12 @@ local function buildShot(originPos, targetPart)
     local targetPos = targetPart.Position
     local lookCF = CFrame.lookAt(originPos, targetPos)
     local lX, lY, lZ = lookCF:ToOrientation()
-    
     local originStruct = {
         [utf8.char(0)] = originPos.X, [utf8.char(1)] = originPos.Y, [utf8.char(2)] = originPos.Z,
         [utf8.char(3)] = lX, [utf8.char(4)] = lY, [utf8.char(5)] = lZ,
     }
-    
     local relCF = targetPart.CFrame:ToObjectSpace(CFrame.new(targetPos))
     local rX, rY, rZ = relCF:ToOrientation()
-    
     return {
         [utf8.char(1)] = {
             [utf8.char(0)] = originStruct,
@@ -181,14 +186,11 @@ local function startTargetFinder()
     _halmu.findConn = RunService.Heartbeat:Connect(function()
         if not _halmu.rageEnabled then
             _halmu.currentTarget = nil
-            _halmu.targetPlayer = nil
             return
         end
         local ref = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         local refPos = ref and ref.Position or Vector3.zero
         local closest, best = nil, math.huge
-        local chosenPlayer = nil
-        
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character and not isSameTeam(plr) then
                 local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
@@ -198,12 +200,10 @@ local function startTargetFinder()
                     if d < best then
                         best = d
                         closest = plr
-                        chosenPlayer = plr
                     end
                 end
             end
         end
-        _halmu.targetPlayer = chosenPlayer
         _halmu.currentTarget = closest and getRageHead(closest.Character) or nil
     end)
 end
@@ -233,6 +233,27 @@ local function startRageFire()
     end)
 end
 
+-- Soft desync (optional)
+local restoreName = "cg_halmu_restore"
+RunService.Heartbeat:Connect(function()
+    if not (_halmu.rageEnabled and _halmu.desyncEnabled and _halmu.currentTarget) then return end
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    _halmu.RealCFrame = hrp.CFrame
+    local tp = _halmu.currentTarget.Position
+    hrp.CFrame = CFrame.new(tp + Vector3.new(0, _halmu.desyncDist, 0), tp)
+    hrp.AssemblyLinearVelocity = Vector3.zero
+end)
+
+RunService:BindToRenderStep(restoreName, 150, function()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp and _halmu.RealCFrame then
+        hrp.CFrame = _halmu.RealCFrame
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        _halmu.RealCFrame = nil
+    end
+end)
+
 local function setRage(on)
     _halmu.rageEnabled = on and true or false
     CrosshairContainer.Visible = _halmu.rageEnabled
@@ -245,7 +266,6 @@ local function setRage(on)
             _halmu.rageConn = nil
         end
         _halmu.currentTarget = nil
-        _halmu.targetPlayer = nil
     end
 end
 
@@ -260,6 +280,15 @@ MainGroup:AddToggle('Ragebot', {
     Tooltip = 'Halmu 패킷 기반 레이지봇 활성화',
     Callback = function(Value)
         setRage(Value)
+    end
+})
+
+MainGroup:AddToggle('DesyncToggle', {
+    Text = 'Halmu Soft Desync',
+    Default = false,
+    Tooltip = '타겟 머리 위로 순간 위치 동기화 이탈(Desync)을 수행합니다.',
+    Callback = function(Value)
+        _halmu.desyncEnabled = Value
     end
 })
 
@@ -301,22 +330,19 @@ task.spawn(function()
         local originalCFrame = root.CFrame
         local voidCFrame = originalCFrame + Vector3.new(0, 10000, 0)
 
-        local targetPlayer = _halmu.targetPlayer
+        local targetPart = _halmu.currentTarget
         local currentTime = tick()
         local hideInterval = getgenv().VoidHideValue or 0.1
 
-        if targetPlayer and targetPlayer.Character and (currentTime - lastAttackTime >= hideInterval) then
-            local enemyHead = targetPlayer.Character:FindFirstChild("Head")
-            if enemyHead then
-                lastAttackTime = currentTime
-                root.CFrame = enemyHead.CFrame
+        if targetPart and targetPart.Parent and (currentTime - lastAttackTime >= hideInterval) then
+            lastAttackTime = currentTime
+            root.CFrame = targetPart.CFrame
 
-                RunService:BindToRenderStep("__void_restore", 1, function()
-                    root.CFrame = voidCFrame
-                    RunService:UnbindFromRenderStep("__void_restore")
-                end)
-                return
-            end
+            RunService:BindToRenderStep("__void_restore", 1, function()
+                root.CFrame = voidCFrame
+                RunService:UnbindFromRenderStep("__void_restore")
+            end)
+            return
         end
 
         root.CFrame = voidCFrame
