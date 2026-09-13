@@ -65,7 +65,7 @@ RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
 RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
 RageTextLabel.BackgroundTransparency = 1
-RageTextLabel.Text = "regebot.hoyang😊"
+RageTextLabel.Text = "regebot"
 RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 RageTextLabel.TextStrokeTransparency = 0
 RageTextLabel.Font = Enum.Font.GothamBold
@@ -277,7 +277,7 @@ local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 MainGroup:AddToggle('Ragebot', {
     Text = 'Ragebot',
     Default = false,
-    Tooltip = 'Halmu 패킷 기반 레이지봇 활성화',
+    Tooltip = 'Ragebot enabled',
     Callback = function(Value)
         setRage(Value)
     end
@@ -286,7 +286,7 @@ MainGroup:AddToggle('Ragebot', {
 MainGroup:AddToggle('DesyncToggle', {
     Text = 'Halmu Soft Desync',
     Default = false,
-    Tooltip = '타겟 머리 위로 순간 위치 동기화 이탈(Desync)을 수행합니다.',
+    Tooltip = 'Halmu Soft Desync',
     Callback = function(Value)
         _halmu.desyncEnabled = Value
     end
@@ -295,14 +295,14 @@ MainGroup:AddToggle('DesyncToggle', {
 MainGroup:AddToggle('VoidSpamToggle', {
     Text = 'Void Spam',
     Default = false,
-    Tooltip = '캐릭터를 10,000스터드 격리시키고 설정 주기에 따라 순간 공격합니다.',
+    Tooltip = 'Void Spam enabled',
     Callback = function(Value)
         getgenv().VoidSpamEnabled = Value
     end
 })
 
 MainGroup:AddSlider('VoidHideSlider', {
-    Text = 'Void Hide (공격 주기)',
+    Text = 'Void Hide',
     Default = 0.1,
     Min = 0.01,
     Max = 1.0,
