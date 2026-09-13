@@ -65,7 +65,7 @@ RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
 RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
 RageTextLabel.BackgroundTransparency = 1
-RageTextLabel.Text = "ragebot"
+RageTextLabel.Text = "regebot.hoyang😊"
 RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 RageTextLabel.TextStrokeTransparency = 0
 RageTextLabel.Font = Enum.Font.GothamBold
@@ -99,279 +99,240 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ==========================================
--- Ragebot 메커니즘 & 딥싱크 (Desync)
+-- Halmu Ragebot Engine & Remote Controller
 -- ==========================================
-local __a1b2c3 = setmetatable({}, {
-    __index = function(__d4e5f6, __g7h8i9)
-        local __j0k1l2, __m3n4o5 = pcall(function()
-            return game:GetService(__g7h8i9)
-        end)
-        if __m3n4o5 then
-            return cloneref(__m3n4o5)
-        end
-        return nil
-    end
-})
+local _halmu = {
+    rageEnabled = false,
+    currentTarget = nil,
+    targetPlayer = nil,
+    rageConn = nil,
+    findConn = nil,
+}
 
-local __p6q7r8 = getgenv()
-local __v2w3x4 = __a1b2c3.Players
-local __y5z6a7 = __a1b2c3.RunService
-local __b8c9d0 = __a1b2c3.ReplicatedStorage
-local __k7l8m9 = __v2w3x4.LocalPlayer
-local __q3r4s5 = __k7l8m9:WaitForChild("PlayerScripts")
+local FighterCtrl, EnumLib, useItemRemote, ssEnum
 
-local __t6u7v8, __w9x0y1
-pcall(function()
-    __t6u7v8 = require(__q3r4s5:WaitForChild("Modules"):WaitForChild("ItemTypes"):WaitForChild("Gun"))
-    __w9x0y1 = require(__b8c9d0:WaitForChild("Modules"):WaitForChild("Utility"))
+task.spawn(function()
+    pcall(function()
+        FighterCtrl = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
+    end)
+    pcall(function()
+        EnumLib = require(ReplicatedStorage.Modules.EnumLibrary)
+    end)
+    pcall(function()
+        useItemRemote = ReplicatedStorage.Remotes.Replication.Fighter.UseItem
+    end)
+    pcall(function()
+        if EnumLib then ssEnum = EnumLib:ToEnum("StartShooting") end
+    end)
 end)
 
-local __z2a3b4 = setmetatable({}, {
-    __index = function(_, __c5d6e7)
-        local __f8g9h0 = __k7l8m9.Character
-        if not __f8g9h0 then return nil end
-        if __c5d6e7 == "__root" then
-            return __f8g9h0:FindFirstChild("HumanoidRootPart")
-        elseif __c5d6e7 == "__head" then
-            return __f8g9h0:FindFirstChild("Head")
+local function isSameTeam(plr)
+    local a = LocalPlayer:GetAttribute("TeamID")
+    local b = plr:GetAttribute("TeamID")
+    if a == nil or b == nil then return false end
+    return a == b
+end
+
+local function getRageHead(char)
+    if not char then return nil end
+    return char:FindFirstChild("HitboxHead")
+        or char:FindFirstChild("HitboxHeadSmall")
+        or char:FindFirstChild("Head")
+end
+
+local function getObjId()
+    if not (FighterCtrl and FighterCtrl.LocalFighter) then return nil end
+    local item = FighterCtrl.LocalFighter.EquippedItem
+    if not item then return nil end
+    local ok, id = pcall(function() return item:Get("ObjectID") end)
+    if ok and id then return id end
+    ok, id = pcall(function() return item.Data and item.Data.ObjectID end)
+    return ok and id or nil
+end
+
+local function buildShot(originPos, targetPart)
+    local targetPos = targetPart.Position
+    local lookCF = CFrame.lookAt(originPos, targetPos)
+    local lX, lY, lZ = lookCF:ToOrientation()
+    
+    local originStruct = {
+        [utf8.char(0)] = originPos.X, [utf8.char(1)] = originPos.Y, [utf8.char(2)] = originPos.Z,
+        [utf8.char(3)] = lX, [utf8.char(4)] = lY, [utf8.char(5)] = lZ,
+    }
+    
+    local relCF = targetPart.CFrame:ToObjectSpace(CFrame.new(targetPos))
+    local rX, rY, rZ = relCF:ToOrientation()
+    
+    return {
+        [utf8.char(1)] = {
+            [utf8.char(0)] = originStruct,
+            [utf8.char(1)] = originStruct,
+            [utf8.char(2)] = targetPart,
+            [utf8.char(3)] = {
+                [utf8.char(0)] = relCF.X, [utf8.char(1)] = relCF.Y, [utf8.char(2)] = relCF.Z,
+                [utf8.char(3)] = rX, [utf8.char(4)] = rY, [utf8.char(5)] = rZ,
+            },
+        },
+    }
+end
+
+local function startTargetFinder()
+    if _halmu.findConn then return end
+    _halmu.findConn = RunService.Heartbeat:Connect(function()
+        if not _halmu.rageEnabled then
+            _halmu.currentTarget = nil
+            _halmu.targetPlayer = nil
+            return
         end
-        return nil
-    end
-})
-
-__p6q7r8.__s9t0u1 = {}
-
-do
-    local __i1j2k3 = __p6q7r8.__s9t0u1
-
-    local function isImmune(char, player)
-        if not char then return true end
-        if char:FindFirstChildOfClass("ForceField") then return true end
-        if player then
-            local spawnTime = player:GetAttribute("SpawnTime") or 0
-            if tick() - spawnTime < 1.5 then return true end
-        end
-        return false
-    end
-
-    function __i1j2k3:__init()
-        self.__active = false
-        self.__target = nil
-        self.__desync = false
-        self.__conn1 = nil
-        self.__conn2 = nil
-        self.__task1 = nil
-        self.__oldfunc = nil
-        self.__activateTime = 0
-        self:__setup()
-    end
-
-    function __i1j2k3:__setup()
-        self.__conn1 = __y5z6a7.Heartbeat:Connect(function()
-            if not self.__active then return end
-            self.__target = self:__find()
-        end)
-
-        if __t6u7v8 then
-            local __l4m5n6 = __t6u7v8.StartShooting
-            self.__oldfunc = __l4m5n6
-            __t6u7v8.StartShooting = function(__o7p8q9, ...)
-                local __r0s1t2 = {__l4m5n6(__o7p8q9, ...)}
-                if not self.__active then return unpack(__r0s1t2) end
-
-                if tick() - self.__activateTime < 1.4 then
-                    return unpack(__r0s1t2)
-                end
-
-                if not __o7p8q9.ClientFighter or not __o7p8q9.ClientFighter.IsLocalPlayer then
-                    return unpack(__r0s1t2)
-                end
-
-                local __u3v4w5 = __r0s1t2[3]
-                if not __u3v4w5 or typeof(__u3v4w5) ~= "table" then
-                    return unpack(__r0s1t2)
-                end
-
-                local __x6y7z8 = self.__target
-
-                if not __x6y7z8 or not __x6y7z8.Character or isImmune(__x6y7z8.Character, __x6y7z8) then
-                    return unpack(__r0s1t2)
-                end
-
-                __r0s1t2[4] = true
-
-                if not self.__desync or self.__curr ~= __x6y7z8 then
-                    self:__desync_start(__x6y7z8)
-                end
-
-                if self.__task1 then
-                    task.cancel(self.__task1)
-                    self.__task1 = nil
-                end
-
-                local __a9b0c1 = __x6y7z8.Character:FindFirstChild("Head")
-                if not __a9b0c1 then return unpack(__r0s1t2) end
-
-                local __d2e3f4 = __a9b0c1.Position
-                local __g5h6i7 = __a9b0c1.CFrame
-                local __p4q5r6 = __g5h6i7:ToObjectSpace(CFrame.new(__d2e3f4))
-
-                __u3v4w5[utf8.char(0)] = __w9x0y1:EncodeCFrame(__g5h6i7)
-                __u3v4w5[utf8.char(1)] = __w9x0y1:EncodeCFrame(__g5h6i7)
-                __u3v4w5[utf8.char(2)] = __a9b0c1
-                __u3v4w5[utf8.char(3)] = __w9x0y1:EncodeCFrame(__p4q5r6)
-
-                self.__task1 = task.delay(0.04, function()
-                    self:__desync_stop()
-                end)
-
-                return unpack(__r0s1t2)
-            end
-        end
-
-        if __w9x0y1 then
-            local old_ray = __w9x0y1.Raycast
-            if old_ray then
-                __w9x0y1.Raycast = function(s, o, d, len, f, ft, viz)
-                    if self.__active then
-                        if len and len > 50 and f then
-                            local tgt = self.__target
-                            if tgt and tgt.Character and tgt.Character:FindFirstChild("Head") then
-                                local head = tgt.Character.Head
-                                local hitpos = head.Position
-                                return {
-                                    Position = hitpos,
-                                    Distance = (hitpos - o).Magnitude,
-                                    Instance = head,
-                                    Material = head.Material,
-                                    Normal = Vector3.yAxis
-                                }
-                            end
-                        end
-                    end
-                    return old_ray(s, o, d, len, f, ft, viz)
-                end
-            end
-        end
-    end
-
-    function __i1j2k3:__find()
-        local myChar = __k7l8m9.Character
-        if not myChar then return nil end
-        local myRoot = myChar:FindFirstChild("HumanoidRootPart")
-        if not myRoot then return nil end
-       
-        local closest = nil
-        local closestDist = math.huge
-        local MAX_DISTANCE = math.huge
-
-        for _, player in next, __v2w3x4:GetPlayers() do
-            if player == __k7l8m9 then continue end
-            if player:GetAttribute("TeamID") == __k7l8m9:GetAttribute("TeamID") then continue end
-           
-            local char = player.Character
-            if not char then continue end
-
-            if isImmune(char, player) then continue end
-
-            local root = char:FindFirstChild("HumanoidRootPart")
-            local head = char:FindFirstChild("Head")
-            local hum = char:FindFirstChildWhichIsA("Humanoid")
-            
-            if not (root and head and hum and hum.Health > 0) then continue end
-           
-            local dist = (myRoot.Position - root.Position).Magnitude
-            if dist > MAX_DISTANCE then continue end
-            
-            if dist < closestDist then
-                closestDist = dist
-                closest = player
-            end
-        end
+        local ref = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local refPos = ref and ref.Position or Vector3.zero
+        local closest, best = nil, math.huge
+        local chosenPlayer = nil
         
-        return closest
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and not isSameTeam(plr) then
+                local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+                if hrp and hum and hum.Health > 0 then
+                    local d = (Vector3.new(refPos.X, 0, refPos.Z) - Vector3.new(hrp.Position.X, 0, hrp.Position.Z)).Magnitude
+                    if d < best then
+                        best = d
+                        closest = plr
+                        chosenPlayer = plr
+                    end
+                end
+            end
+        end
+        _halmu.targetPlayer = chosenPlayer
+        _halmu.currentTarget = closest and getRageHead(closest.Character) or nil
+    end)
+end
+
+local function startRageFire()
+    if _halmu.rageConn then
+        _halmu.rageConn:Disconnect()
+        _halmu.rageConn = nil
     end
+    if not _halmu.rageEnabled then return end
 
-    function __i1j2k3:__desync_start(__c3d4e5)
-        if self.__conn2 then self.__conn2:Disconnect() end
-        self.__desync = true
-        self.__curr = __c3d4e5
+    local cachedId = nil
+    _halmu.rageConn = RunService.Heartbeat:Connect(function()
+        if not _halmu.rageEnabled then return end
+        if not useItemRemote or not ssEnum then return end
+        local target = _halmu.currentTarget
+        if not target or not target.Parent then return end
 
-        self.__conn2 = __y5z6a7.Heartbeat:Connect(function()
-            if not self.__desync then return end
-            local __f6g7h8 = __z2a3b4.__root
-            if not __f6g7h8 then return end
+        local objId = getObjId()
+        if objId then cachedId = objId else objId = cachedId end
+        if not objId then return end
 
-            if not __c3d4e5.Character or isImmune(__c3d4e5.Character, __c3d4e5) then
-                self:__desync_stop()
-                return
-            end
-
-            local enemyHead = __c3d4e5.Character:FindFirstChild("Head")
-            if not enemyHead then
-                self:__desync_stop()
-                return
-            end
-
-            local __l2m3n4 = __f6g7h8.CFrame
-            local __o5p6q7 = __f6g7h8.Velocity
-            local __r8s9t0 = __f6g7h8.RotVelocity
-
-            __f6g7h8.CFrame = enemyHead.CFrame + Vector3.new(0, 0, 0)
-
-            __y5z6a7:BindToRenderStep("__restore", 1, function()
-                __f6g7h8.CFrame = __l2m3n4
-                __f6g7h8.Velocity = __o5p6q7
-                __f6g7h8.RotVelocity = __r8s9t0
-                __y5z6a7:UnbindFromRenderStep("__restore")
-            end)
+        local origin = target.Position + Vector3.new(0, 0.1, 0)
+        pcall(function()
+            useItemRemote:FireServer(objId, ssEnum, buildShot(origin, target), nil)
         end)
-    end
+    end)
+end
 
-    function __i1j2k3:__desync_stop()
-        self.__desync = false
-        self.__curr = nil
-        if self.__conn2 then
-            self.__conn2:Disconnect()
-            self.__conn2 = nil
+local function setRage(on)
+    _halmu.rageEnabled = on and true or false
+    CrosshairContainer.Visible = _halmu.rageEnabled
+    if on then
+        startTargetFinder()
+        startRageFire()
+    else
+        if _halmu.rageConn then
+            _halmu.rageConn:Disconnect()
+            _halmu.rageConn = nil
         end
+        _halmu.currentTarget = nil
+        _halmu.targetPlayer = nil
     end
-
-    function __i1j2k3:SetState(state)
-        self.__active = state
-        CrosshairContainer.Visible = state
-        if state then
-            self.__activateTime = tick() 
-        else
-            self:__desync_stop()
-        end
-    end
-
-    __i1j2k3:__init()
 end
 
 -- ==========================================
--- 1. Main 탭 설정 (Ragebot & No Cooldown)
+-- 1. Main 탭 설정 (Combat & Aimbot)
 -- ==========================================
 local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
 MainGroup:AddToggle('Ragebot', {
     Text = 'Ragebot',
     Default = false,
-    Tooltip = 'Ragebot enabled',
+    Tooltip = 'Halmu 패킷 기반 레이지봇 활성화',
     Callback = function(Value)
-        if getgenv().__s9t0u1 and getgenv().__s9t0u1.SetState then
-            getgenv().__s9t0u1:SetState(Value)
-        end
+        setRage(Value)
     end
 })
+
+MainGroup:AddToggle('VoidSpamToggle', {
+    Text = 'Void Spam',
+    Default = false,
+    Tooltip = '캐릭터를 10,000스터드 격리시키고 설정 주기에 따라 순간 공격합니다.',
+    Callback = function(Value)
+        getgenv().VoidSpamEnabled = Value
+    end
+})
+
+MainGroup:AddSlider('VoidHideSlider', {
+    Text = 'Void Hide (공격 주기)',
+    Default = 0.1,
+    Min = 0.01,
+    Max = 1.0,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        getgenv().VoidHideValue = Value
+    end
+})
+
+getgenv().VoidSpamEnabled = false
+getgenv().VoidHideValue = 0.1
+
+task.spawn(function()
+    local lastAttackTime = 0
+
+    RunService.Heartbeat:Connect(function()
+        if not getgenv().VoidSpamEnabled then return end
+
+        local char = LocalPlayer.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        local originalCFrame = root.CFrame
+        local voidCFrame = originalCFrame + Vector3.new(0, 10000, 0)
+
+        local targetPlayer = _halmu.targetPlayer
+        local currentTime = tick()
+        local hideInterval = getgenv().VoidHideValue or 0.1
+
+        if targetPlayer and targetPlayer.Character and (currentTime - lastAttackTime >= hideInterval) then
+            local enemyHead = targetPlayer.Character:FindFirstChild("Head")
+            if enemyHead then
+                lastAttackTime = currentTime
+                root.CFrame = enemyHead.CFrame
+
+                RunService:BindToRenderStep("__void_restore", 1, function()
+                    root.CFrame = voidCFrame
+                    RunService:UnbindFromRenderStep("__void_restore")
+                end)
+                return
+            end
+        end
+
+        root.CFrame = voidCFrame
+        RunService:BindToRenderStep("__void_hold", 1, function()
+            root.CFrame = originalCFrame
+            RunService:UnbindFromRenderStep("__void_hold")
+        end)
+    end)
+end)
 
 local originalWeaponValues = {}
 
 MainGroup:AddToggle('RivalsNoCDToggle', {
-    Text = 'Triggerbot',
+    Text = 'No Cooldown',
     Default = false,
-    Tooltip = 'Triggerbot',
+    Tooltip = 'No Cooldown',
     Callback = function(Value)
         getgenv().RivalsNoCD = Value
         if Value then
@@ -412,6 +373,83 @@ MainGroup:AddToggle('RivalsNoCDToggle', {
     end
 })
 
+-- Aimbot 그룹박스
+local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
+local Camera = workspace.CurrentCamera
+
+local FOVGui = Instance.new("ScreenGui")
+FOVGui.Name = "HoNyangFOV"
+FOVGui.ResetOnSpawn = false
+FOVGui.Parent = PlayerGui
+
+local FOVFrame = Instance.new("Frame", FOVGui)
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Visible = false
+
+local UICorner = Instance.new("UICorner", FOVFrame)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+local FOVStroke = Instance.new("UIStroke", FOVFrame)
+FOVStroke.Thickness = 2
+
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue + 2) % 360
+    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+end)
+
+AimbotGroup:AddToggle('AimbotToggle', { Text = 'Aimbot enabled', Default = false })
+AimbotGroup:AddToggle('ShowFOVToggle', {
+    Text = 'FOV',
+    Default = false,
+    Callback = function(Value) FOVFrame.Visible = Value end
+})
+
+AimbotGroup:AddSlider('FOVSlider', {
+    Text = 'FOV size',
+    Default = 150, Min = 50, Max = 500, Rounding = 0,
+    Callback = function(Value)
+        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
+    end
+})
+
+FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
+
+RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
+    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
+    
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local currentFOV = Options.FOVSlider.Value
+    local nearestTarget = nil
+    local shortestDistance = math.huge
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local enemyChar = player.Character
+            if enemyChar:FindFirstChildOfClass("ForceField") then continue end
+
+            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+            local linkHead = enemyChar:FindFirstChild("Head")
+            if humanoid and humanoid.Health > 0 and linkHead then
+                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if onScreen and distance <= currentFOV and distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestTarget = linkHead
+                end
+            end
+        end
+    end
+    
+    if nearestTarget then
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
+    end
+end)
+
 -- ==========================================
 -- 2. Visuals 탭 (ESP & Skybox)
 -- ==========================================
@@ -445,12 +483,7 @@ local Presets = {
 
 local function ApplySky(id)
     local sky = GetSky()
-    sky.SkyboxBk = id
-    sky.SkyboxDn = id
-    sky.SkyboxFt = id
-    sky.SkyboxLf = id
-    sky.SkyboxRt = id
-    sky.SkyboxUp = id
+    sky.SkyboxBk, sky.SkyboxDn, sky.SkyboxFt, sky.SkyboxLf, sky.SkyboxRt, sky.SkyboxUp = id, id, id, id, id, id
 end
 
 local function RemoveSky()
@@ -461,14 +494,9 @@ end
 SkyboxGroup:AddDropdown('SkyboxPresetDropdown', {
     Values = { 'Disable', 'Purple Nebula', 'Night Sky', 'Pink Sunset', 'Vaporwave' },
     Default = 1,
-    Multi = false,
     Text = 'Presets',
     Callback = function(Value)
-        if Value == 'Disable' then
-            RemoveSky()
-        elseif Presets[Value] then
-            ApplySky(Presets[Value])
-        end
+        if Value == 'Disable' then RemoveSky() elseif Presets[Value] then ApplySky(Presets[Value]) end
     end
 })
 
@@ -481,21 +509,13 @@ local SetControlsRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild
 Group:AddDropdown('DeviceDropdown', {
     Values = { 'PC (Mouse & Keyboard)', 'Mobile (Touch)', 'Controller (Gamepad)', 'VR' },
     Default = 1,
-    Multi = false,
     Text = 'Device Spoof',
-    Tooltip = 'Rivals 서버로 전송할 입력 기기를 변경합니다.',
     Callback = function(Value)
         local TargetDevice = "MouseKeyboard"
-
-        if Value:find("PC") then
-            TargetDevice = "MouseKeyboard"
-        elseif Value:find("Mobile") then
-            TargetDevice = "Touch"
-        elseif Value:find("Controller") then
-            TargetDevice = "Gamepad"
-        elseif Value:find("VR") then
-            TargetDevice = "VR"
-        end
+        if Value:find("PC") then TargetDevice = "MouseKeyboard"
+        elseif Value:find("Mobile") then TargetDevice = "Touch"
+        elseif Value:find("Controller") then TargetDevice = "Gamepad"
+        elseif Value:find("VR") then TargetDevice = "VR" end
 
         SetControlsRemote:FireServer("MouseKeyboard")
         task.wait(0.1)
@@ -509,11 +529,8 @@ Group:AddButton({
         if Options and Options.DeviceDropdown then
             Options.DeviceDropdown:OnChanged(Options.DeviceDropdown.Value)
         end
-    end,
-    DoubleClick = false,
-    Tooltip = '선택한 디바이스 신호를 서버로 즉시 재전송합니다.'
+    end
 })
-
 
 -- ==========================================
 -- 4. ESP Render Loop
@@ -522,7 +539,6 @@ local espData = {}
 
 local function addESP(p)
     if p == LocalPlayer then return end
-    
     task.spawn(function()
         local box, hpBg, hpBar, hpText, nameText, distText, tracer
         pcall(function()
@@ -654,7 +670,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. Skin Changer (Misc 탭)
+-- Skin Changer (Misc 탭)
 local SkinBox = Tabs.Misc:AddRightGroupbox('Skin Changer')
 SkinBox:AddButton('Unlock All', function()
     task.spawn(function()
@@ -933,205 +949,6 @@ end
 ]=]
             loadstring(scriptString)()
             Library:Notify("Skin unlock complete!", 3)
-        end)
-    end)
-end)
-
--- Tabs.Main에 Aimbot 그룹박스 생성
-local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
--- 1. FOV Circle UI 생성
-local FOVGui = Instance.new("ScreenGui")
-FOVGui.Name = "HoNyangFOV"
-FOVGui.ResetOnSpawn = false
-FOVGui.Parent = PlayerGui
-
-local FOVFrame = Instance.new("Frame", FOVGui)
-FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-FOVFrame.BackgroundTransparency = 1
-FOVFrame.Visible = false
-
-local UICorner = Instance.new("UICorner", FOVFrame)
-UICorner.CornerRadius = UDim.new(1, 0)
-
-local FOVStroke = Instance.new("UIStroke", FOVFrame)
-FOVStroke.Thickness = 2
-
--- FOV 무지개 색상 애니메이션
-local hue = 0
-RunService.RenderStepped:Connect(function()
-    hue = (hue + 2) % 360
-    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
-end)
-
--- 2. UI 조작 컨트롤러 (Toggles / Options)
-AimbotGroup:AddToggle('AimbotToggle', {
-    Text = 'Aimbot enabled',
-    Default = false,
-    Tooltip = 'aimbot enabled'
-})
-
-AimbotGroup:AddToggle('ShowFOVToggle', {
-    Text = 'FOV',
-    Default = false,
-    Callback = function(Value)
-        FOVFrame.Visible = Value
-    end
-})
-
-AimbotGroup:AddSlider('FOVSlider', {
-    Text = 'FOV size',
-    Default = 150,
-    Min = 50,
-    Max = 500,
-    Rounding = 0,
-    Callback = function(Value)
-        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
-    end
-})
-
--- 초기 FOV 크기 설정
-FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
-
--- 3. 에임봇 타겟팅 및 카메라 고정 로직
-RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
-    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
-    
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
-    local currentFOV = Options.FOVSlider.Value
-    local nearestTarget = nil
-    local shortestDistance = math.huge
-    
-    -- NPC 탐색
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Humanoid") and obj.Health > 0 then
-            local model = obj.Parent
-            if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
-                local head = model:FindFirstChild("Head")
-                if head then
-                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                    if onScreen and distance <= currentFOV and distance < shortestDistance then
-                        shortestDistance = distance
-                        nearestTarget = head
-                    end
-                end
-            end
-        end
-    end
-    
-    -- 플레이어 탐색
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local enemyChar = player.Character
-            if enemyChar:FindFirstChildOfClass("ForceField") or (tick() - (player:GetAttribute("SpawnTime") or 0) < 1.5) then continue end
-
-            local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
-            local linkHead = enemyChar:FindFirstChild("Head")
-            if humanoid and humanoid.Health > 0 and linkHead then
-                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
-                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if onScreen and distance <= currentFOV and distance < shortestDistance then
-                    shortestDistance = distance
-                    nearestTarget = linkHead
-                end
-            end
-        end
-    end
-    
-    -- 타겟 방향으로 카메라 CFrame 고정
-    if nearestTarget then
-        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
-    end
-end)
-
--- ==========================================
--- Void Spam (보이드 스펨) 기능 구현
--- ==========================================
-
--- UI 슬라이더 및 토글 추가
-MainGroup:Tads.MainAddToggle('VoidSpamToggle', {
-    Text = 'Void Spam',
-    Default = false,
-    Tooltip = '캐릭터를 10,000스터드 격리시키고 설정 주기에 따라 순간 공격합니다.',
-    Callback = function(Value)
-        getgenv().VoidSpamEnabled = Value
-    end
-})
-
-MainGroup:AddSlider('VoidHideSlider', {
-    Text = 'Void Hide (공격 주기)',
-    Default = 0.1,
-    Min = 0.01,
-    Max = 1.0,
-    Rounding = 2,
-    Compact = false,
-    Callback = function(Value)
-        getgenv().VoidHideValue = Value
-    end
-})
-
--- 변수 초기화
-getgenv().VoidSpamEnabled = false
-getgenv().VoidHideValue = 0.1
-
--- Void Spam 루프
-task.spawn(function()
-    local lastAttackTime = 0
-
-    RunService.Heartbeat:Connect(function()
-        if not getgenv().VoidSpamEnabled then return end
-
-        local char = LocalPlayer.Character
-        if not char then return end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-
-        -- 1. 기본 위치: 원래 위치에서 10,000스터드 위(보이드)로 고정
-        local originalCFrame = root.CFrame
-        local voidCFrame = originalCFrame + Vector3.new(0, 10000, 0)
-
-        -- 타겟 검색 (가장 가까운 적)
-        local targetPlayer = nil
-        if getgenv().__s9t0u1 and getgenv().__s9t0u1.__find then
-            targetPlayer = getgenv().__s9t0u1:__find()
-        end
-
-        local currentTime = tick()
-        local hideInterval = getgenv().VoidHideValue or 0.1
-
-        -- 2. VoidHide 주기에 도달했을 때만 순간적으로 적 위치로 이동
-        if targetPlayer and targetPlayer.Character and (currentTime - lastAttackTime >= hideInterval) then
-            local enemyHead = targetPlayer.Character:FindFirstChild("Head")
-            if enemyHead then
-                lastAttackTime = currentTime
-
-                -- 적 위치로 순간 이동
-                root.CFrame = enemyHead.CFrame
-
-                -- RenderStep을 사용하여 1프레임 동안 공격 신호를 남긴 후 보이드 위치로 복귀
-                RunService:BindToRenderStep("__void_restore", 1, function()
-                    root.CFrame = voidCFrame
-                    RunService:UnbindFromRenderStep("__void_restore")
-                end)
-                return
-            end
-        end
-
-        -- 공격 주기가 아닐 때는 항상 10,000스터드 먼 보이드 상태 유지
-        root.CFrame = voidCFrame
-        RunService:BindToRenderStep("__void_hold", 1, function()
-            root.CFrame = originalCFrame
-            RunService:UnbindFromRenderStep("__void_hold")
         end)
     end)
 end)
