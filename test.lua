@@ -1245,21 +1245,3 @@ EmoteGroup:AddSlider('EmoteSpeedSlider', {
         end
     end
 })
-
--- Theme
-ThemeManager:SetLibrary(Library)
-
--- Config
-SaveManager:SetLibrary(Library)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({
-    'MenuKeybind'
-})
-
-ThemeManager:SetFolder('YumuEnchantment')
-SaveManager:SetFolder('YumuEnchantment/Rivals')
-
-SaveManager:BuildConfigSection(Tabs['UI Settings'])
-ThemeManager:ApplyToTab(Tabs['UI Settings'])
-
-SaveManager:LoadAutoloadConfig()
