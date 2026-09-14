@@ -1140,3 +1140,111 @@ AutoShotGroup:AddToggle('Enable360AutoShot', {
         setRage(Value)
     end
 })
+
+-- ==========================================
+-- Emote Speed 그룹박스 (LinoriaLib 연동)
+-- ==========================================
+local EmoteGroup = Tabs.Misc:AddLeftGroupbox('Emote Speed')
+
+local EmoteEnabled = false
+local emoteTrack = nil
+local EMOTESPEED = 250
+
+-- 사용할 이모트 ID 목록
+local EMOTES = {
+    "rbxassetid://507771019",
+    "rbxassetid://507776043",
+    "rbxassetid://507777623",
+    "rbxassetid://3698339488",
+    "rbxassetid://92281817840531",
+}
+
+local function stopEmote()
+    EmoteEnabled = false
+    if emoteTrack then
+        pcall(function() emoteTrack:Stop() end)
+        emoteTrack = nil
+    end
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        pcall(function()
+            for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
+                t:Stop()
+            end
+        end)
+    end
+end
+
+local function playEmote(char)
+    if not EmoteEnabled then return end
+    char = char or LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 3)
+    if not hum then return end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = hum
+    end
+
+    for _, id in ipairs(EMOTES) do
+        local ok, track = pcall(function()
+            local a = Instance.new("Animation")
+            a.AnimationId = id
+            local t = animator:LoadAnimation(a)
+            t.Priority = Enum.AnimationPriority.Action4
+            t.Looped = true
+            t:Play(0.1, 1, EMOTESPEED)
+            return t
+        end)
+        if ok and track then
+            emoteTrack = track
+            track.Stopped:Connect(function()
+                if EmoteEnabled then
+                    task.defer(function() playEmote(char) end)
+                end
+            end)
+            return
+        end
+    end
+end
+
+-- 리스폰 시 이모트 재재생 처리
+LocalPlayer.CharacterAdded:Connect(function(char)
+    if EmoteEnabled then
+        task.delay(0.5, function()
+            if EmoteEnabled then playEmote(char) end
+        end)
+    end
+end)
+
+-- UI 컴포넌트 추가
+EmoteGroup:AddToggle('EnableEmoteSpeed', {
+    Text = 'Enable Fast Emote',
+    Default = false,
+    Tooltip = '초고속 이모트를 재생합니다.',
+    Callback = function(Value)
+        if Value then
+            EmoteEnabled = true
+            playEmote(LocalPlayer.Character)
+        else
+            stopEmote()
+        end
+    end
+})
+
+EmoteGroup:AddSlider('EmoteSpeedSlider', {
+    Text = 'Emote Speed Value',
+    Default = 250,
+    Min = 1,
+    Max = 1000,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+        EMOTESPEED = Value
+        if emoteTrack and EmoteEnabled then
+            pcall(function() emoteTrack:AdjustSpeed(EMOTESPEED) end)
+        end
+    end
+})
