@@ -978,3 +978,165 @@ end
         end)
     end)
 end)
+
+local AutoShotGroup = Tabs.Main:AddLeftGroupbox('360 Auto Shot')
+
+-- 내부 상태 관리 테이블
+local _halmu = {
+    rageEnabled = false,
+    currentTarget = nil,
+    rageConn = nil,
+    findConn = nil,
+}
+
+local FighterCtrl, EnumLib, useItemRemote, ssEnum
+
+-- 모듈 및 리모트 로드 (비동기 처리)
+task.spawn(function()
+    pcall(function()
+        FighterCtrl = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
+    end)
+    pcall(function()
+        EnumLib = require(ReplicatedStorage.Modules.EnumLibrary)
+    end)
+    pcall(function()
+        useItemRemote = ReplicatedStorage.Remotes.Replication.Fighter.UseItem
+    end)
+    pcall(function()
+        if EnumLib then ssEnum = EnumLib:ToEnum("StartShooting") end
+    end)
+end)
+
+-- 아군 판별
+local function isSameTeam(plr)
+    local a = LocalPlayer:GetAttribute("TeamID")
+    local b = plr:GetAttribute("TeamID")
+    if a == nil or b == nil then return false end
+    return a == b
+end
+
+-- 타겟 헤드 파트 탐색
+local function getRageHead(char)
+    if not char then return nil end
+    return char:FindFirstChild("HitboxHead")
+        or char:FindFirstChild("HitboxHeadSmall")
+        or char:FindFirstChild("Head")
+end
+
+-- 착용 중인 무기의 ObjectID 구하기
+local function getObjId()
+    if not (FighterCtrl and FighterCtrl.LocalFighter) then return nil end
+    local item = FighterCtrl.LocalFighter.EquippedItem
+    if not item then return nil end
+    local ok, id = pcall(function() return item:Get("ObjectID") end)
+    if ok and id then return id end
+    ok, id = pcall(function() return item.Data and item.Data.ObjectID end)
+    return ok and id or nil
+end
+
+-- Halmu 특유의 발사 데이터(CFrame/인코딩 구조) 생성
+local function buildShot(originPos, targetPart)
+    local targetPos = targetPart.Position
+    local lookCF = CFrame.lookAt(originPos, targetPos)
+    local lX, lY, lZ = lookCF:ToOrientation()
+    
+    local originStruct = {
+        [utf8.char(0)] = originPos.X, [utf8.char(1)] = originPos.Y, [utf8.char(2)] = originPos.Z,
+        [utf8.char(3)] = lX, [utf8.char(4)] = lY, [utf8.char(5)] = lZ,
+    }
+    
+    local relCF = targetPart.CFrame:ToObjectSpace(CFrame.new(targetPos))
+    local rX, rY, rZ = relCF:ToOrientation()
+    
+    return {
+        [utf8.char(1)] = {
+            [utf8.char(0)] = originStruct,
+            [utf8.char(1)] = originStruct,
+            [utf8.char(2)] = targetPart,
+            [utf8.char(3)] = {
+                [utf8.char(0)] = relCF.X, [utf8.char(1)] = relCF.Y, [utf8.char(2)] = relCF.Z,
+                [utf8.char(3)] = rX, [utf8.char(4)] = rY, [utf8.char(5)] = rZ,
+            },
+        },
+    }
+end
+
+-- 최단 거리 적 탐색 루프
+local function startTargetFinder()
+    if _halmu.findConn then return end
+    _halmu.findConn = RunService.Heartbeat:Connect(function()
+        if not _halmu.rageEnabled then
+            _halmu.currentTarget = nil
+            return
+        end
+        local ref = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local refPos = ref and ref.Position or Vector3.zero
+        local closest, best = nil, math.huge
+        
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and not isSameTeam(plr) then
+                local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+                if hrp and hum and hum.Health > 0 then
+                    local d = (Vector3.new(refPos.X, 0, refPos.Z) - Vector3.new(hrp.Position.X, 0, hrp.Position.Z)).Magnitude
+                    if d < best then
+                        best = d
+                        closest = plr
+                    end
+                end
+            end
+        end
+        _halmu.currentTarget = closest and getRageHead(closest.Character) or nil
+    end)
+end
+
+-- 패킷 전송 사격 루프
+local function startRageFire()
+    if _halmu.rageConn then
+        _halmu.rageConn:Disconnect()
+        _halmu.rageConn = nil
+    end
+    if not _halmu.rageEnabled then return end
+
+    local cachedId = nil
+    _halmu.rageConn = RunService.Heartbeat:Connect(function()
+        if not _halmu.rageEnabled then return end
+        if not useItemRemote or not ssEnum then return end
+        local target = _halmu.currentTarget
+        if not target or not target.Parent then return end
+
+        local objId = getObjId()
+        if objId then cachedId = objId else objId = cachedId end
+        if not objId then return end
+
+        local origin = target.Position + Vector3.new(0, 0.1, 0)
+        pcall(function()
+            useItemRemote:FireServer(objId, ssEnum, buildShot(origin, target), nil)
+        end)
+    end)
+end
+
+-- 레이지봇 켜기/끄기 토글 제어 함수
+local function setRage(on)
+    _halmu.rageEnabled = on and true or false
+    if on then
+        startTargetFinder()
+        startRageFire()
+    else
+        if _halmu.rageConn then
+            _halmu.rageConn:Disconnect()
+            _halmu.rageConn = nil
+        end
+        _halmu.currentTarget = nil
+    end
+end
+
+-- UI 토글 생성
+AutoShotGroup:AddToggle('Enable360AutoShot', {
+    Text = 'Enable',
+    Default = false,
+    Tooltip = 'Enable 360 Auto Shot',
+    Callback = function(Value)
+        setRage(Value)
+    end
+})
