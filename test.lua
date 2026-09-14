@@ -25,7 +25,7 @@ local Tabs = {
     Visuals = Window:AddTab('Visuals'),
     character = Window:AddTab('character'),
     Misc = Window:AddTab('Misc'),
-    Setting = Window:AddTab('Setting')
+    Setting = Window:AddTab('UI Settings')
 }
 
 
@@ -1233,7 +1233,7 @@ EmoteGroup:AddToggle('EnableEmoteSpeed', {
 
 EmoteGroup:AddSlider('EmoteSpeedSlider', {
     Text = 'Emote',
-    Default = 250,
+    Default = 1,
     Min = 1,
     Max = 1000,
     Rounding = 0,
@@ -1245,3 +1245,21 @@ EmoteGroup:AddSlider('EmoteSpeedSlider', {
         end
     end
 })
+
+-- Theme
+ThemeManager:SetLibrary(Library)
+
+-- Config
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({
+    'MenuKeybind'
+})
+
+ThemeManager:SetFolder('YumuEnchantment')
+SaveManager:SetFolder('YumuEnchantment/Rivals')
+
+SaveManager:BuildConfigSection(Tabs['UI Settings'])
+ThemeManager:ApplyToTab(Tabs['UI Settings'])
+
+SaveManager:LoadAutoloadConfig()
