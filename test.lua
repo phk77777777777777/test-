@@ -1,5 +1,7 @@
 local repo = 'https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/'
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
 
 local Toggles = getgenv().Toggles or Library.Toggles
 local Options = getgenv().Options or Library.Options
@@ -27,7 +29,6 @@ local Tabs = {
     Misc = Window:AddTab('Misc'),
     Setting = Window:AddTab('UI Settings')
 }
-
 
 local RageUIGui = Instance.new("ScreenGui", PlayerGui)
 RageUIGui.Name = "HoNyangRageUI"
@@ -96,7 +97,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ==========================================
--- [요청 반영] Halmu-style Ragebot Engine
+-- Halmu-style Ragebot Engine
 -- ==========================================
 local _halmu = {
     rageEnabled = false,
@@ -230,7 +231,6 @@ local function startRageFire()
     end)
 end
 
--- Soft desync (optional)
 local restoreName = "cg_halmu_restore"
 RunService.Heartbeat:Connect(function()
     if not (_halmu.rageEnabled and _halmu.desyncEnabled and _halmu.currentTarget) then return end
@@ -267,7 +267,7 @@ local function setRage(on)
 end
 
 -- ==========================================
--- 1. Main 탭 설정 (Combat & Aimbot)
+-- 1. Main 탭 설정
 -- ==========================================
 local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
@@ -396,7 +396,17 @@ MainGroup:AddToggle('RivalsNoCDToggle', {
     end
 })
 
--- Aimbot 그룹박스
+local AutoShotGroup = Tabs.Main:AddRightGroupbox('360 Auto Shot')
+
+AutoShotGroup:AddToggle('Enable360AutoShot', {
+    Text = 'Enable 360 Auto Shot',
+    Default = false,
+    Tooltip = 'Enable 360 Auto Shot',
+    Callback = function(Value)
+        setRage(Value)
+    end
+})
+
 local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
 local Camera = workspace.CurrentCamera
 
@@ -474,7 +484,7 @@ RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 
 end)
 
 -- ==========================================
--- 2. Visuals 탭 (ESP & Skybox)
+-- 2. Visuals 탭
 -- ==========================================
 local ESPGroup = Tabs.Visuals:AddLeftGroupbox('ESP')
 
@@ -524,7 +534,112 @@ SkyboxGroup:AddDropdown('SkyboxPresetDropdown', {
 })
 
 -- ==========================================
--- 3. Misc 탭 (Device Spoof & Skin Changer)
+-- 3. Character 탭 (Emote)
+-- ==========================================
+local EmoteGroup = Tabs.character:AddLeftGroupbox('Emote')
+
+local EmoteEnabled = false
+local emoteTrack = nil
+local EMOTESPEED = 1
+
+local EMOTES = {
+    "rbxassetid://507771019",
+    "rbxassetid://507776043",
+    "rbxassetid://507777623",
+    "rbxassetid://3698339488",
+    "rbxassetid://92281817840531",
+}
+
+local function stopEmote()
+    EmoteEnabled = false
+    if emoteTrack then
+        pcall(function() emoteTrack:Stop() end)
+        emoteTrack = nil
+    end
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        pcall(function()
+            for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
+                t:Stop()
+            end
+        end)
+    end
+end
+
+local function playEmote(char)
+    if not EmoteEnabled then return end
+    char = char or LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 3)
+    if not hum then return end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = hum
+    end
+
+    for _, id in ipairs(EMOTES) do
+        local ok, track = pcall(function()
+            local a = Instance.new("Animation")
+            a.AnimationId = id
+            local t = animator:LoadAnimation(a)
+            t.Priority = Enum.AnimationPriority.Action4
+            t.Looped = true
+            t:Play(0.1, 1, EMOTESPEED)
+            return t
+        end)
+        if ok and track then
+            emoteTrack = track
+            track.Stopped:Connect(function()
+                if EmoteEnabled then
+                    task.defer(function() playEmote(char) end)
+                end
+            end)
+            return
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    if EmoteEnabled then
+        task.delay(0.5, function()
+            if EmoteEnabled then playEmote(char) end
+        end)
+    end
+end)
+
+EmoteGroup:AddToggle('EnableEmoteSpeed', {
+    Text = 'Enable Fast Emote',
+    Default = false,
+    Tooltip = 'emote',
+    Callback = function(Value)
+        if Value then
+            EmoteEnabled = true
+            playEmote(LocalPlayer.Character)
+        else
+            stopEmote()
+        end
+    end
+})
+
+EmoteGroup:AddSlider('EmoteSpeedSlider', {
+    Text = 'Emote Speed',
+    Default = 1,
+    Min = 1,
+    Max = 1000,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+        EMOTESPEED = Value
+        if emoteTrack and EmoteEnabled then
+            pcall(function() emoteTrack:AdjustSpeed(EMOTESPEED) end)
+        end
+    end
+})
+
+-- ==========================================
+-- 4. Misc 탭
 -- ==========================================
 local Group = Tabs.Misc:AddLeftGroupbox('Device Spoofing')
 local SetControlsRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Replication"):WaitForChild("Fighter"):WaitForChild("SetControls")
@@ -555,145 +670,6 @@ Group:AddButton({
     end
 })
 
--- ==========================================
--- 4. ESP Render Loop
--- ==========================================
-local espData = {}
-
-local function addESP(p)
-    if p == LocalPlayer then return end
-    task.spawn(function()
-        local box, hpBg, hpBar, hpText, nameText, distText, tracer
-        pcall(function()
-            if Drawing then
-                box = Drawing.new("Square"); box.Visible = false; box.Color = Color3.new(1, 1, 1); box.Thickness = 1; box.Filled = false
-                hpBg = Drawing.new("Square"); hpBg.Visible = false; hpBg.Color = Color3.new(0, 0, 0); hpBg.Thickness = 1; hpBg.Filled = true
-                hpBar = Drawing.new("Square"); hpBar.Visible = false; hpBar.Color = Color3.new(0, 1, 0); hpBar.Thickness = 1; hpBar.Filled = true
-                hpText = Drawing.new("Text"); hpText.Visible = false; hpText.Center = true; hpText.Outline = true; hpText.Color = Color3.new(1, 1, 1); hpText.Size = 13
-                nameText = Drawing.new("Text"); nameText.Visible = false; nameText.Center = true; nameText.Outline = true; nameText.Color = Color3.new(1, 1, 1); nameText.Size = 13
-                distText = Drawing.new("Text"); distText.Visible = false; distText.Center = true; distText.Outline = true; distText.Color = Color3.new(1, 1, 1); distText.Size = 13
-                tracer = Drawing.new("Line"); tracer.Visible = false; tracer.Color = Color3.new(1, 1, 1); tracer.Thickness = 1
-            end
-        end)
-        
-        if box then
-            espData[p] = { Box = box, HpBg = hpBg, HealthBar = hpBar, HealthText = hpText, NameText = nameText, DistText = distText, Tracer = tracer, Skeleton = {} }
-            local bones = {{"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}}
-            for _, b in pairs(bones) do 
-                pcall(function() 
-                    if Drawing then table.insert(espData[p].Skeleton, {b[1], b[2], Drawing.new("Line")}) end
-                end) 
-            end
-        end
-    end)
-end
-
-for _, p in ipairs(Players:GetPlayers()) do addESP(p) end
-Players.PlayerAdded:Connect(addESP)
-Players.PlayerRemoving:Connect(function(p)
-    if espData[p] then
-        pcall(function()
-            espData[p].Box:Remove(); espData[p].HpBg:Remove(); espData[p].HealthBar:Remove(); espData[p].HealthText:Remove()
-            espData[p].NameText:Remove(); espData[p].DistText:Remove(); espData[p].Tracer:Remove()
-            for _, s in pairs(espData[p].Skeleton) do s[3]:Remove() end
-        end)
-        espData[p] = nil
-    end
-end)
-
-local function IsToggleActive(toggleName)
-    return Toggles and Toggles[toggleName] and Toggles[toggleName].Value == true
-end
-
-RunService.RenderStepped:Connect(function()
-    local Camera = Workspace.CurrentCamera
-    if not Camera then return end
-
-    for p, d in pairs(espData) do
-        local isAlive = false
-        local c = p.Character
-        local root, head, rootPos, boxSize, boxPos, top, bottom, height, width
-        
-        if c and c:FindFirstChild("Humanoid") and c.Humanoid.Health > 0 then
-            root = c:FindFirstChild("HumanoidRootPart")
-            head = c:FindFirstChild("Head") or c:FindFirstChild("UpperTorso") or c:FindFirstChild("Torso")
-            
-            if root and head then
-                local rPos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                if onScreen then
-                    isAlive = true
-                    rootPos = rPos
-                    local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                    local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
-                    height = math.abs(headPos.Y - legPos.Y)
-                    width = height * 0.6 
-                    boxSize = Vector2.new(width, height)
-                    boxPos = Vector2.new(rootPos.X - width / 2, headPos.Y)
-                    top = {Y = headPos.Y}
-                    bottom = {Y = legPos.Y}
-                end
-            end
-        end
-        
-        if isAlive then
-            if IsToggleActive("ESPBox") then d.Box.Size = boxSize; d.Box.Position = boxPos; d.Box.Visible = true else d.Box.Visible = false end
-            
-            if IsToggleActive("ESPHealth") then
-                local maxH = math.max(c.Humanoid.MaxHealth, 1)
-                local h = math.clamp(c.Humanoid.Health / maxH, 0, 1)
-                d.HpBg.Size = Vector2.new(4, height); d.HpBg.Position = Vector2.new(boxPos.X - 6, boxPos.Y); d.HpBg.Visible = true
-                local barHeight = height * h
-                d.HealthBar.Size = Vector2.new(2, barHeight); d.HealthBar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
-                d.HealthBar.Color = Color3.fromHSV(h * 0.33, 1, 1); d.HealthBar.Visible = true
-                d.HealthText.Text = tostring(math.floor(c.Humanoid.Health)); d.HealthText.Position = Vector2.new(boxPos.X - 25, boxPos.Y + (height - barHeight) - 6); d.HealthText.Visible = true
-            else 
-                d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false 
-            end
-            
-            if IsToggleActive("ESPName") then d.NameText.Text = p.Name; d.NameText.Position = Vector2.new(boxPos.X + width/2, top.Y - 15); d.NameText.Visible = true else d.NameText.Visible = false end
-            if IsToggleActive("ESPDistance") then local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude); d.DistText.Text = tostring(dist) .. "m"; d.DistText.Position = Vector2.new(boxPos.X + width/2, bottom.Y + 2); d.DistText.Visible = true else d.DistText.Visible = false end
-            if IsToggleActive("ESPTracer") then d.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y); d.Tracer.To = Vector2.new(rootPos.X, bottom.Y); d.Tracer.Visible = true else d.Tracer.Visible = false end
-            
-            if IsToggleActive("ESPSkeleton") then
-                for _, s in pairs(d.Skeleton) do
-                    local p1, p2 = c:FindFirstChild(s[1]), c:FindFirstChild(s[2])
-                    if p1 and p2 then
-                        local v1, o1 = Camera:WorldToViewportPoint(p1.Position)
-                        local v2, o2 = Camera:WorldToViewportPoint(p2.Position)
-                        if o1 and o2 then s[3].From = Vector2.new(v1.X, v1.Y); s[3].To = Vector2.new(v2.X, v2.Y); s[3].Visible = true; s[3].Color = Color3.new(1, 1, 1) else s[3].Visible = false end
-                    else s[3].Visible = false end
-                end
-            else 
-                for _, s in pairs(d.Skeleton) do s[3].Visible = false end 
-            end
-            
-            local highlight = c:FindFirstChild("AntiHubChams")
-            if IsToggleActive("ESPChams") then
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "AntiHubChams"
-                    highlight.FillColor = Color3.new(1, 0, 0)
-                    highlight.OutlineColor = Color3.new(1, 1, 1)
-                    highlight.FillTransparency = 0.5
-                    highlight.Parent = c
-                end
-            else
-                if highlight then highlight:Destroy() end
-            end
-        else
-            d.Box.Visible = false; d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false
-            d.NameText.Visible = false; d.DistText.Visible = false; d.Tracer.Visible = false
-            for _, s in pairs(d.Skeleton) do s[3].Visible = false end
-            
-            if c then
-                local highlight = c:FindFirstChild("AntiHubChams")
-                if highlight then highlight:Destroy() end
-            end
-        end
-    end
-end)
-
--- Skin Changer (Misc 탭)
 local SkinBox = Tabs.Misc:AddRightGroupbox('Skin Changer')
 SkinBox:AddButton('Unlock All', function()
     task.spawn(function()
@@ -976,298 +952,168 @@ end
     end)
 end)
 
-local AutoShotGroup = Tabs.Main:AddLeftGroupbox('360 Auto Shot')
+-- ==========================================
+-- ESP Render Loop
+-- ==========================================
+local espData = {}
 
--- 내부 상태 관리 테이블
-local _halmu = {
-    rageEnabled = false,
-    currentTarget = nil,
-    rageConn = nil,
-    findConn = nil,
-}
-
-local FighterCtrl, EnumLib, useItemRemote, ssEnum
-
--- 모듈 및 리모트 로드 (비동기 처리)
-task.spawn(function()
-    pcall(function()
-        FighterCtrl = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
-    end)
-    pcall(function()
-        EnumLib = require(ReplicatedStorage.Modules.EnumLibrary)
-    end)
-    pcall(function()
-        useItemRemote = ReplicatedStorage.Remotes.Replication.Fighter.UseItem
-    end)
-    pcall(function()
-        if EnumLib then ssEnum = EnumLib:ToEnum("StartShooting") end
-    end)
-end)
-
--- 아군 판별
-local function isSameTeam(plr)
-    local a = LocalPlayer:GetAttribute("TeamID")
-    local b = plr:GetAttribute("TeamID")
-    if a == nil or b == nil then return false end
-    return a == b
-end
-
--- 타겟 헤드 파트 탐색
-local function getRageHead(char)
-    if not char then return nil end
-    return char:FindFirstChild("HitboxHead")
-        or char:FindFirstChild("HitboxHeadSmall")
-        or char:FindFirstChild("Head")
-end
-
--- 착용 중인 무기의 ObjectID 구하기
-local function getObjId()
-    if not (FighterCtrl and FighterCtrl.LocalFighter) then return nil end
-    local item = FighterCtrl.LocalFighter.EquippedItem
-    if not item then return nil end
-    local ok, id = pcall(function() return item:Get("ObjectID") end)
-    if ok and id then return id end
-    ok, id = pcall(function() return item.Data and item.Data.ObjectID end)
-    return ok and id or nil
-end
-
--- Halmu 특유의 발사 데이터(CFrame/인코딩 구조) 생성
-local function buildShot(originPos, targetPart)
-    local targetPos = targetPart.Position
-    local lookCF = CFrame.lookAt(originPos, targetPos)
-    local lX, lY, lZ = lookCF:ToOrientation()
-    
-    local originStruct = {
-        [utf8.char(0)] = originPos.X, [utf8.char(1)] = originPos.Y, [utf8.char(2)] = originPos.Z,
-        [utf8.char(3)] = lX, [utf8.char(4)] = lY, [utf8.char(5)] = lZ,
-    }
-    
-    local relCF = targetPart.CFrame:ToObjectSpace(CFrame.new(targetPos))
-    local rX, rY, rZ = relCF:ToOrientation()
-    
-    return {
-        [utf8.char(1)] = {
-            [utf8.char(0)] = originStruct,
-            [utf8.char(1)] = originStruct,
-            [utf8.char(2)] = targetPart,
-            [utf8.char(3)] = {
-                [utf8.char(0)] = relCF.X, [utf8.char(1)] = relCF.Y, [utf8.char(2)] = relCF.Z,
-                [utf8.char(3)] = rX, [utf8.char(4)] = rY, [utf8.char(5)] = rZ,
-            },
-        },
-    }
-end
-
--- 최단 거리 적 탐색 루프
-local function startTargetFinder()
-    if _halmu.findConn then return end
-    _halmu.findConn = RunService.Heartbeat:Connect(function()
-        if not _halmu.rageEnabled then
-            _halmu.currentTarget = nil
-            return
-        end
-        local ref = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local refPos = ref and ref.Position or Vector3.zero
-        local closest, best = nil, math.huge
+local function addESP(p)
+    if p == LocalPlayer then return end
+    task.spawn(function()
+        local box, hpBg, hpBar, hpText, nameText, distText, tracer
+        pcall(function()
+            if Drawing then
+                box = Drawing.new("Square"); box.Visible = false; box.Color = Color3.new(1, 1, 1); box.Thickness = 1; box.Filled = false
+                hpBg = Drawing.new("Square"); hpBg.Visible = false; hpBg.Color = Color3.new(0, 0, 0); hpBg.Thickness = 1; hpBg.Filled = true
+                hpBar = Drawing.new("Square"); hpBar.Visible = false; hpBar.Color = Color3.new(0, 1, 0); hpBar.Thickness = 1; hpBar.Filled = true
+                hpText = Drawing.new("Text"); hpText.Visible = false; hpText.Center = true; hpText.Outline = true; hpText.Color = Color3.new(1, 1, 1); hpText.Size = 13
+                nameText = Drawing.new("Text"); nameText.Visible = false; nameText.Center = true; nameText.Outline = true; nameText.Color = Color3.new(1, 1, 1); nameText.Size = 13
+                distText = Drawing.new("Text"); distText.Visible = false; distText.Center = true; distText.Outline = true; distText.Color = Color3.new(1, 1, 1); distText.Size = 13
+                tracer = Drawing.new("Line"); tracer.Visible = false; tracer.Color = Color3.new(1, 1, 1); tracer.Thickness = 1
+            end
+        end)
         
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and not isSameTeam(plr) then
-                local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-                local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-                if hrp and hum and hum.Health > 0 then
-                    local d = (Vector3.new(refPos.X, 0, refPos.Z) - Vector3.new(hrp.Position.X, 0, hrp.Position.Z)).Magnitude
-                    if d < best then
-                        best = d
-                        closest = plr
-                    end
-                end
+        if box then
+            espData[p] = { Box = box, HpBg = hpBg, HealthBar = hpBar, HealthText = hpText, NameText = nameText, DistText = distText, Tracer = tracer, Skeleton = {} }
+            local bones = {{"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}}
+            for _, b in pairs(bones) do 
+                pcall(function() 
+                    if Drawing then table.insert(espData[p].Skeleton, {b[1], b[2], Drawing.new("Line")}) end
+                end) 
             end
         end
-        _halmu.currentTarget = closest and getRageHead(closest.Character) or nil
     end)
 end
 
--- 패킷 전송 사격 루프
-local function startRageFire()
-    if _halmu.rageConn then
-        _halmu.rageConn:Disconnect()
-        _halmu.rageConn = nil
-    end
-    if not _halmu.rageEnabled then return end
-
-    local cachedId = nil
-    _halmu.rageConn = RunService.Heartbeat:Connect(function()
-        if not _halmu.rageEnabled then return end
-        if not useItemRemote or not ssEnum then return end
-        local target = _halmu.currentTarget
-        if not target or not target.Parent then return end
-
-        local objId = getObjId()
-        if objId then cachedId = objId else objId = cachedId end
-        if not objId then return end
-
-        local origin = target.Position + Vector3.new(0, 0.1, 0)
+for _, p in ipairs(Players:GetPlayers()) do addESP(p) end
+Players.PlayerAdded:Connect(addESP)
+Players.PlayerRemoving:Connect(function(p)
+    if espData[p] then
         pcall(function()
-            useItemRemote:FireServer(objId, ssEnum, buildShot(origin, target), nil)
+            espData[p].Box:Remove(); espData[p].HpBg:Remove(); espData[p].HealthBar:Remove(); espData[p].HealthText:Remove()
+            espData[p].NameText:Remove(); espData[p].DistText:Remove(); espData[p].Tracer:Remove()
+            for _, s in pairs(espData[p].Skeleton) do s[3]:Remove() end
         end)
-    end)
-end
-
--- 레이지봇 켜기/끄기 토글 제어 함수
-local function setRage(on)
-    _halmu.rageEnabled = on and true or false
-    if on then
-        startTargetFinder()
-        startRageFire()
-    else
-        if _halmu.rageConn then
-            _halmu.rageConn:Disconnect()
-            _halmu.rageConn = nil
-        end
-        _halmu.currentTarget = nil
-    end
-end
-
--- UI 토글 생성
-AutoShotGroup:AddToggle('Enable360AutoShot', {
-    Text = 'Enable',
-    Default = false,
-    Tooltip = 'Enable 360 Auto Shot',
-    Callback = function(Value)
-        setRage(Value)
-    end
-})
-
--- ==========================================
--- Emote Speed 그룹박스 (LinoriaLib 연동)
--- ==========================================
-local EmoteGroup = Tabs.character:AddLeftGroupbox('Emote')
-
-local EmoteEnabled = false
-local emoteTrack = nil
-local EMOTESPEED = 1
-
--- 사용할 이모트 ID 목록
-local EMOTES = {
-    "rbxassetid://507771019",
-    "rbxassetid://507776043",
-    "rbxassetid://507777623",
-    "rbxassetid://3698339488",
-    "rbxassetid://92281817840531",
-}
-
-local function stopEmote()
-    EmoteEnabled = false
-    if emoteTrack then
-        pcall(function() emoteTrack:Stop() end)
-        emoteTrack = nil
-    end
-    local char = LocalPlayer.Character
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        pcall(function()
-            for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
-                t:Stop()
-            end
-        end)
-    end
-end
-
-local function playEmote(char)
-    if not EmoteEnabled then return end
-    char = char or LocalPlayer.Character
-    if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 3)
-    if not hum then return end
-    local animator = hum:FindFirstChildOfClass("Animator")
-    if not animator then
-        animator = Instance.new("Animator")
-        animator.Parent = hum
-    end
-
-    for _, id in ipairs(EMOTES) do
-        local ok, track = pcall(function()
-            local a = Instance.new("Animation")
-            a.AnimationId = id
-            local t = animator:LoadAnimation(a)
-            t.Priority = Enum.AnimationPriority.Action4
-            t.Looped = true
-            t:Play(0.1, 1, EMOTESPEED)
-            return t
-        end)
-        if ok and track then
-            emoteTrack = track
-            track.Stopped:Connect(function()
-                if EmoteEnabled then
-                    task.defer(function() playEmote(char) end)
-                end
-            end)
-            return
-        end
-    end
-end
-
--- 리스폰 시 이모트 재재생 처리
-LocalPlayer.CharacterAdded:Connect(function(char)
-    if EmoteEnabled then
-        task.delay(0.5, function()
-            if EmoteEnabled then playEmote(char) end
-        end)
+        espData[p] = nil
     end
 end)
 
--- UI 컴포넌트 추가
-EmoteGroup:AddToggle('EnableEmoteSpeed', {
-    Text = 'Enable Fast Emote',
-    Default = false,
-    Tooltip = 'emote',
-    Callback = function(Value)
-        if Value then
-            EmoteEnabled = true
-            playEmote(LocalPlayer.Character)
+local function IsToggleActive(toggleName)
+    return Toggles and Toggles[toggleName] and Toggles[toggleName].Value == true
+end
+
+RunService.RenderStepped:Connect(function()
+    local Camera = Workspace.CurrentCamera
+    if not Camera then return end
+
+    for p, d in pairs(espData) do
+        local isAlive = false
+        local c = p.Character
+        local root, head, rootPos, boxSize, boxPos, top, bottom, height, width
+        
+        if c and c:FindFirstChild("Humanoid") and c.Humanoid.Health > 0 then
+            root = c:FindFirstChild("HumanoidRootPart")
+            head = c:FindFirstChild("Head") or c:FindFirstChild("UpperTorso") or c:FindFirstChild("Torso")
+            
+            if root and head then
+                local rPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                if onScreen then
+                    isAlive = true
+                    rootPos = rPos
+                    local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                    local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+                    height = math.abs(headPos.Y - legPos.Y)
+                    width = height * 0.6 
+                    boxSize = Vector2.new(width, height)
+                    boxPos = Vector2.new(rootPos.X - width / 2, headPos.Y)
+                    top = {Y = headPos.Y}
+                    bottom = {Y = legPos.Y}
+                end
+            end
+        end
+        
+        if isAlive then
+            if IsToggleActive("ESPBox") then d.Box.Size = boxSize; d.Box.Position = boxPos; d.Box.Visible = true else d.Box.Visible = false end
+            
+            if IsToggleActive("ESPHealth") then
+                local maxH = math.max(c.Humanoid.MaxHealth, 1)
+                local h = math.clamp(c.Humanoid.Health / maxH, 0, 1)
+                d.HpBg.Size = Vector2.new(4, height); d.HpBg.Position = Vector2.new(boxPos.X - 6, boxPos.Y); d.HpBg.Visible = true
+                local barHeight = height * h
+                d.HealthBar.Size = Vector2.new(2, barHeight); d.HealthBar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
+                d.HealthBar.Color = Color3.fromHSV(h * 0.33, 1, 1); d.HealthBar.Visible = true
+                d.HealthText.Text = tostring(math.floor(c.Humanoid.Health)); d.HealthText.Position = Vector2.new(boxPos.X - 25, boxPos.Y + (height - barHeight) - 6); d.HealthText.Visible = true
+            else 
+                d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false 
+            end
+            
+            if IsToggleActive("ESPName") then d.NameText.Text = p.Name; d.NameText.Position = Vector2.new(boxPos.X + width/2, top.Y - 15); d.NameText.Visible = true else d.NameText.Visible = false end
+            if IsToggleActive("ESPDistance") then local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude); d.DistText.Text = tostring(dist) .. "m"; d.DistText.Position = Vector2.new(boxPos.X + width/2, bottom.Y + 2); d.DistText.Visible = true else d.DistText.Visible = false end
+            if IsToggleActive("ESPTracer") then d.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y); d.Tracer.To = Vector2.new(rootPos.X, bottom.Y); d.Tracer.Visible = true else d.Tracer.Visible = false end
+            
+            if IsToggleActive("ESPSkeleton") then
+                for _, s in pairs(d.Skeleton) do
+                    local p1, p2 = c:FindFirstChild(s[1]), c:FindFirstChild(s[2])
+                    if p1 and p2 then
+                        local v1, o1 = Camera:WorldToViewportPoint(p1.Position)
+                        local v2, o2 = Camera:WorldToViewportPoint(p2.Position)
+                        if o1 and o2 then s[3].From = Vector2.new(v1.X, v1.Y); s[3].To = Vector2.new(v2.X, v2.Y); s[3].Visible = true; s[3].Color = Color3.new(1, 1, 1) else s[3].Visible = false end
+                    else s[3].Visible = false end
+                end
+            else 
+                for _, s in pairs(d.Skeleton) do s[3].Visible = false end 
+            end
+            
+            local highlight = c:FindFirstChild("AntiHubChams")
+            if IsToggleActive("ESPChams") then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "AntiHubChams"
+                    highlight.FillColor = Color3.new(1, 0, 0)
+                    highlight.OutlineColor = Color3.new(1, 1, 1)
+                    highlight.FillTransparency = 0.5
+                    highlight.Parent = c
+                end
+            else
+                if highlight then highlight:Destroy() end
+            end
         else
-            stopEmote()
+            d.Box.Visible = false; d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false
+            d.NameText.Visible = false; d.DistText.Visible = false; d.Tracer.Visible = false
+            for _, s in pairs(d.Skeleton) do s[3].Visible = false end
+            
+            if c then
+                local highlight = c:FindFirstChild("AntiHubChams")
+                if highlight then highlight:Destroy() end
+            end
         end
     end
-})
+end)
 
-EmoteGroup:AddSlider('EmoteSpeedSlider', {
-    Text = 'Emote',
-    Default = 1,
-    Min = 1,
-    Max = 1000,
-    Rounding = 0,
-    Compact = false,
-    Callback = function(Value)
-        EMOTESPEED = Value
-        if emoteTrack and EmoteEnabled then
-            pcall(function() emoteTrack:AdjustSpeed(EMOTESPEED) end)
-        end
-    end
-})
+-- ==========================================
+-- 5. UI Settings 탭 (ThemeManager & SaveManager)
+-- ==========================================
+local MenuGroup = Tabs.Setting:AddLeftGroupbox('Menu')
+local ThemeGroup = Tabs.Setting:AddRightGroupbox('Themes')
 
-
-local MenuGroup = TabsUI Settings:AddLeftGroupbox('Menu')
-local ThemeGroup = TabsUI Settings:AddRightGroupbox('Themes')
-
--- 1. ThemeManager 설정 (테마 폴더명 지정 및 그룹박스 바인딩)
+-- ThemeManager 바인딩
 ThemeManager:SetLibrary(Library)
-ThemeManager:SetFolder('UserHub') -- 로블록스 workspace 내 저장될 폴더 이름
+ThemeManager:SetFolder('YumuHub')
 ThemeManager:ApplyToGroupbox(ThemeGroup)
 
--- 2. SaveManager 설정 (저장 폴더 지정 및 그룹박스 바인딩)
+-- SaveManager 바인딩
 SaveManager:SetLibrary(Library)
-SaveManager:SetFolder('UserHub/configs') -- 컨피그 파일 저장 경로
-SaveManager:IgnoreThemeSettings() -- 테마 색상은 컨피그와 별도로 관리
-SaveManager:SetIgnoreIndexes({ 'MenuKeybind' }) -- 컨피그 저장 시 제외할 요소
-SaveManager:BuildConfigSection(Tabs['UI Settings']) -- 컨피그 UI 요소 자동 생성
+SaveManager:SetFolder('YumuHub/configs')
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+SaveManager:BuildConfigSection(Tabs.Setting)
 
--- UI 닫기 키바인드 및 Unload 버튼 추가
+-- UI 메뉴 닫기 키바인드 및 Unload 추가
 MenuGroup:AddButton('Unload UI', function() Library:Unload() end)
 MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
 
 Library.ToggleKeybind = Options.MenuKeybind
 
 -- 기본 테마 적용 및 Config 자동 로드
-ThemeManager:ApplyTheme('Default') -- 기본 테마 설정
-SaveManager:LoadAutoloadConfig() -- Auto Load 설정해둔 컨피그 자동 실행
+ThemeManager:ApplyTheme('Default')
+SaveManager:LoadAutoloadConfig()
