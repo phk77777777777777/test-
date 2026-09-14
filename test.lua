@@ -1145,7 +1145,7 @@ local EmoteGroup = Tabs.character:AddLeftGroupbox('Emote')
 
 local EmoteEnabled = false
 local emoteTrack = nil
-local EMOTESPEED = 250
+local EMOTESPEED = 1
 
 -- 사용할 이모트 ID 목록
 local EMOTES = {
