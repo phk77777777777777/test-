@@ -1245,3 +1245,29 @@ EmoteGroup:AddSlider('EmoteSpeedSlider', {
         end
     end
 })
+
+
+local MenuGroup = TabsUI Settings:AddLeftGroupbox('Menu')
+local ThemeGroup = TabsUI Settings:AddRightGroupbox('Themes')
+
+-- 1. ThemeManager 설정 (테마 폴더명 지정 및 그룹박스 바인딩)
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder('UserHub') -- 로블록스 workspace 내 저장될 폴더 이름
+ThemeManager:ApplyToGroupbox(ThemeGroup)
+
+-- 2. SaveManager 설정 (저장 폴더 지정 및 그룹박스 바인딩)
+SaveManager:SetLibrary(Library)
+SaveManager:SetFolder('UserHub/configs') -- 컨피그 파일 저장 경로
+SaveManager:IgnoreThemeSettings() -- 테마 색상은 컨피그와 별도로 관리
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' }) -- 컨피그 저장 시 제외할 요소
+SaveManager:BuildConfigSection(Tabs['UI Settings']) -- 컨피그 UI 요소 자동 생성
+
+-- UI 닫기 키바인드 및 Unload 버튼 추가
+MenuGroup:AddButton('Unload UI', function() Library:Unload() end)
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+-- 기본 테마 적용 및 Config 자동 로드
+ThemeManager:ApplyTheme('Default') -- 기본 테마 설정
+SaveManager:LoadAutoloadConfig() -- Auto Load 설정해둔 컨피그 자동 실행
