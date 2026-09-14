@@ -1,11 +1,9 @@
 local repo = 'https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/'
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 
--- LinoriaLib 전역 객체 바인딩
 local Toggles = getgenv().Toggles or Library.Toggles
 local Options = getgenv().Options or Library.Options
 
--- 로블록스 필수 서비스 선언
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -25,13 +23,12 @@ local Window = Library:CreateWindow({
 local Tabs = {
     Main = Window:AddTab('Main'),
     Visuals = Window:AddTab('Visuals'),
+    character = Window:AddTab('character'),
     Misc = Window:AddTab('Misc'),
     Setting = Window:AddTab('Setting')
 }
 
--- ==========================================
--- Ragebot Custom UI (Crosshair & Watermark)
--- ==========================================
+
 local RageUIGui = Instance.new("ScreenGui", PlayerGui)
 RageUIGui.Name = "HoNyangRageUI"
 RageUIGui.ResetOnSpawn = false
@@ -1144,7 +1141,7 @@ AutoShotGroup:AddToggle('Enable360AutoShot', {
 -- ==========================================
 -- Emote Speed 그룹박스 (LinoriaLib 연동)
 -- ==========================================
-local EmoteGroup = Tabs.Misc:AddLeftGroupbox('Emote Speed')
+local EmoteGroup = Tabs.character:AddLeftGroupbox('Emote')
 
 local EmoteEnabled = false
 local emoteTrack = nil
@@ -1223,7 +1220,7 @@ end)
 EmoteGroup:AddToggle('EnableEmoteSpeed', {
     Text = 'Enable Fast Emote',
     Default = false,
-    Tooltip = '초고속 이모트를 재생합니다.',
+    Tooltip = 'emote',
     Callback = function(Value)
         if Value then
             EmoteEnabled = true
@@ -1235,7 +1232,7 @@ EmoteGroup:AddToggle('EnableEmoteSpeed', {
 })
 
 EmoteGroup:AddSlider('EmoteSpeedSlider', {
-    Text = 'Emote Speed Value',
+    Text = 'Emote',
     Default = 250,
     Min = 1,
     Max = 1000,
