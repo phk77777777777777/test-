@@ -1117,3 +1117,26 @@ Library.ToggleKeybind = Options.MenuKeybind
 -- 기본 테마 적용 및 Config 자동 로드
 ThemeManager:ApplyTheme('Default')
 SaveManager:LoadAutoloadConfig()
+
+-- Settings 탭의 MenuGroup 내에 추가
+local MenuGroup = Tabs.Setting:AddLeftGroupbox('Keybind')
+
+-- 1) Keybind List 메뉴 켜기/끄기 토글
+MenuGroup:AddToggle('Keybind', {
+    Text = 'Show Keybind List',
+    Default = false,
+    Tooltip = 'keybind',
+    Callback = function(Value)
+        Library.KeybindFrame.Visible = Value
+    end
+})
+
+-- 2) UI 메뉴 열기/닫기 키바인드 설정
+MenuGroup:AddLabel('Keybind'):AddKeyPicker('MenuToggleKey', {
+    Default = 'End',
+    NoUI = true,
+    Text = 'Keybind'
+})
+
+-- LinoriaLib 라이브러리에 키바인드 연결
+Library.ToggleKeybind = Options.MenuToggleKey
