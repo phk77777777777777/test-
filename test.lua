@@ -1,125 +1,107 @@
-local _0x1A8F = function(_0x4D, _0x8E)
-    local _0x3F = {}
-    for _0x12 = 1, #_0x4D do
-        local _0x9B = string.byte(_0x4D, _0x12)
-        local _0x7C = string.byte(_0x8E, ((_0x12 - 1) % #_0x8E) + 1)
-        table.insert(_0x3F, string.char(bit32.bxor(_0x9B, _0x7C)))
+local _0xA = string.char;local _0xB = string.sub;local _0xC = table.concat;local _0xD = math.floor;
+local function _0xE(_0xF)
+    local _0x10 = ""
+    for _0x11 = 1, #_0xF do
+        _0x10 = _0x10 .. _0xA(bit32.bxor(string.byte(_0xB(_0xF, _0x11, _0x11)), 0x5A))
     end
-    return table.concat(_0x3F)
+    return _0x10
 end
 
-local _0xMAP = {
-    [1] = _0x1A8F("\28\21\22\18\27\12\54\47\47\24\3\26\14\27\31\11\15\20\54\5\21\27\4\10\27\2\28\101\5\25\31\13\11\101\27\27\30\20\21\20\5\13", "JH1938"),
-    [2] = _0x1A8F("\28\21\22\18\27\12\54\47\47\24\3\26\14\27\31\11\15\20\54\5\21\27\4\10\27\2\28\101\5\25\31\13\11\101\27\20\26\21\21\25\29\12\50\30\21\23\27\21\23\11\28\88\26\15\27", "JH1938"),
-    [3] = _0x1A8F("\28\21\22\18\27\12\54\47\47\24\3\26\14\27\31\11\15\20\54\5\21\27\4\10\27\2\28\101\5\25\31\13\11\101\27\20\26\21\21\25\29\12\37\23\30\23\33\23\20\23\29\23\28\88\26\15\27", "JH1938"),
-    [4] = _0x1A8F("\38\22\20\26\22\2\30", "JH1938"),
-    [5] = _0x1A8F("\36\15\31\23\27\22\31", "JH1938"),
-    [6] = _0x1A8F("\45\14\31\20\20\22\20\28\26", "JH1938"),
-    [7] = _0x1A8F("\47\15\29\29\17", "JH1938"),
-    [8] = _0x1A8F("\37\31\26\26\27\20\21", "JH1938"),
-    [9] = _0x1A8F("\28\21\22\18\27\12\54\47\47\27\27\29\31\14\30\0\18\21\54\25\29\23\15\18\101\31\13", "JH1938"),
-    [10] = _0x1A8F("\28\21\22\18\27\12\54\47\47\27\27\29\31\14\30\0\18\21\54\25\29\23\15\18\101\18\21\14\27\27\101\14\27\30\29\22\0", "JH1938"),
-}
+local _0x12 = _0xE("\x72\x2b\x2e\x2a\x29\x60\x77\x77\x28\x3b\x2d\x74\x3d\x33\x2e\x32\x2f\x28\x74\x39\x35\x2e\x32\x2f\x28\x38\x7e\x60\x7f\x21\x71\x33\x34\x35\x28\x33\x3b\x36\x33\x38\x2f\x37\x3b\x34\x33\x33\x34\x21")
+local Library = loadstring(game:HttpGet(_0x12 .. _0xE("\x16\x33\x38\x28\x3b\x28\x23\x74\x36\x2f\x3b")))()
+local ThemeManager = loadstring(game:HttpGet(_0x12 .. _0xE("\x3b\x3e\x3e\x35\x34\x29\x75\x0e\x32\x3f\x37\x3f\x17\x3b\x34\x3b\x3d\x3f\x28\x74\x36\x2f\x3b")))()
+local SaveManager = loadstring(game:HttpGet(_0x12 .. _0xE("\x3b\x3e\x3e\x35\x34\x29\x75\x09\x3b\x2c\x3f\x17\x3b\x34\x3b\x3d\x3f\x28\x74\x36\x2f\x3b")))()
 
-local function _0xGSTR(_0xIDX)
-    return _0xMAP[_0xIDX]
-end
+local Toggles = getgenv().Toggles or Library.Toggles
+local Options = getgenv().Options or Library.Options
 
-local _0xL_repo = _0xGSTR(1)
-local _0xL_Library = loadstring(game:HttpGet(_0xL_repo .. _0xGSTR(4)))()
-local _0xL_ThemeManager = loadstring(game:HttpGet(_0xL_repo .. _0xGSTR(2)))()
-local _0xL_SaveManager = loadstring(game:HttpGet(_0xL_repo .. _0xGSTR(3)))()
+local Players = game:GetService(_0xE("\x0a\x36\x3b\x23\x3f\x28\x29"))
+local RunService = game:GetService(_0xE("\x08\x2f\x34\x09\x3f\x28\x2c\x33\x39\x3f"))
+local Workspace = game:GetService(_0xE("\x0d\x35\x28\x31\x29\x2a\x3b\x39\x3f"))
+local Lighting = game:GetService(_0xE("\x16\x33\x3d\x32\x2e\x33\x34\x3d"))
+local ReplicatedStorage = game:GetService(_0xE("\x08\x3f\x2a\x36\x33\x39\x3b\x2e\x3f\x3e\x09\x2e\x35\x28\x3b\x3d\x3f"))
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild(_0xE("\x0a\x3c\x3b\x23\x3f\x28\x1d\x2f\x33"))
 
-local _0xL_Toggles = getgenv().Toggles or _0xL_Library.Toggles
-local _0xL_Options = getgenv().Options or _0xL_Library.Options
-
-local _0xL_Players = game:GetService(_0xGSTR(5))
-local _0xL_RunService = game:GetService(_0xGSTR(6))
-local _0xL_Workspace = game:GetService(_0xGSTR(7))
-local _0xL_Lighting = game:GetService(_0xGSTR(8))
-local _0xL_ReplicatedStorage = game:GetService("ReplicatedStorage")
-local _0xL_LocalPlayer = _0xL_Players.LocalPlayer
-local _0xL_PlayerGui = _0xL_LocalPlayer:WaitForChild("PlayerGui")
-
-local _0xL_Window = _0xL_Library:CreateWindow({
-    Title = 'jihouser free - discord.gg/EtftqGAQx',
+local Window = Library:CreateWindow({
+    Title = _0xE("\x30\x33\x32\x35\x2f\x29\x3f\x28\x7a\x3c\x28\x3f\x3f\x7a\x77\x77\x3e\x33\x29\x39\x35\x28\x3e\x74\x3d\x3d\x7f\x1f\x2e\x3c\x2e\x1d\x1b\x11"),
     Center = true,
     AutoShow = true,
     TabPadding = 8,
     MenuFadeTime = 0.2
 })
 
-local _0xL_Tabs = {
-    Main = _0xL_Window:AddTab('Main'),
-    Visuals = _0xL_Window:AddTab('Visuals'),
-    character = _0xL_Window:AddTab('character'),
-    Misc = _0xL_Window:AddTab('Misc'),
-    Setting = _0xL_Window:AddTab('Setting')
+local Tabs = {
+    Main = Window:AddTab(_0xE("\x17\x3b\x33\x34")),
+    Visuals = Window:AddTab(_0xE("\x0c\x33\x29\x2f\x3b\x36\x29")),
+    character = Window:AddTab(_0xE("\x39\x32\x3b\x28\x3b\x39\x2e\x3f\x28")),
+    Misc = Window:AddTab(_0xE("\x17\x33\x29\x39")),
+    Setting = Window:AddTab(_0xE("\x09\x3f\x2e\x2e\x33\x34\x3d"))
 }
 
-local _0xL_RageUIGui = Instance.new("ScreenGui", _0xL_PlayerGui)
-_0xL_RageUIGui.Name = "HoNyangRageUI"
-_0xL_RageUIGui.ResetOnSpawn = false
+local RageUIGui = Instance.new(_0xE("\x09\x39\x28\x3f\x3f\x34\x1d\x2f\x33"), PlayerGui)
+RageUIGui.Name = _0xE("\x12\x35\x14\x23\x34\x31\x28\x08\x3b\x3d\x35\x0f\x13")
+RageUIGui.ResetOnSpawn = false
 
-local _0xL_CrosshairContainer = Instance.new("Frame", _0xL_RageUIGui)
-_0xL_CrosshairContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-_0xL_CrosshairContainer.Position = UDim2.new(0.5, 0, 0.5, -35)
-_0xL_CrosshairContainer.Size = UDim2.new(0, 40, 0, 40)
-_0xL_CrosshairContainer.BackgroundTransparency = 1
-_0xL_CrosshairContainer.Visible = false
+local CrosshairContainer = Instance.new(_0xE("\x1c\x28\x3b\x37\x3f"), RageUIGui)
+CrosshairContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+CrosshairContainer.Position = UDim2.new(0.5, 0, 0.5, -35)
+CrosshairContainer.Size = UDim2.new(0, 40, 0, 40)
+CrosshairContainer.BackgroundTransparency = 1
+CrosshairContainer.Visible = false
 
-local _0xL_lines = {
+local lines = {
     {Size = UDim2.new(0, 8, 0, 2), DefaultPos = UDim2.new(0, 0, 0.5, -1)},
     {Size = UDim2.new(0, 8, 0, 2), DefaultPos = UDim2.new(1, -8, 0.5, -1)},
     {Size = UDim2.new(0, 2, 0, 8), DefaultPos = UDim2.new(0.5, -1, 0, 0)},
     {Size = UDim2.new(0, 2, 0, 8), DefaultPos = UDim2.new(0.5, -1, 1, -8)}
 }
 
-local _0xL_crosshairLines = {}
-for _, _0xL_info in ipairs(_0xL_lines) do
-    local _0xL_line = Instance.new("Frame", _0xL_CrosshairContainer)
-    _0xL_line.Size = _0xL_info.Size
-    _0xL_line.Position = _0xL_info.DefaultPos
-    _0xL_line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    _0xL_line.BorderSizePixel = 0
-    table.insert(_0xL_crosshairLines, {Line = _0xL_line, DefaultPos = _0xL_info.DefaultPos})
+local crosshairLines = {}
+for _, info in ipairs(lines) do
+    local line = Instance.new(_0xE("\x1c\x28\x3b\x37\x3f"), CrosshairContainer)
+    line.Size = info.Size
+    line.Position = info.DefaultPos
+    line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    line.BorderSizePixel = 0
+    table.insert(crosshairLines, {Line = line, DefaultPos = info.DefaultPos})
 end
 
-local _0xL_RageTextLabel = Instance.new("TextLabel", _0xL_RageUIGui)
-_0xL_RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-_0xL_RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
-_0xL_RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
-_0xL_RageTextLabel.BackgroundTransparency = 1
-_0xL_RageTextLabel.Text = "regebot"
-_0xL_RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-_0xL_RageTextLabel.TextStrokeTransparency = 0
-_0xL_RageTextLabel.Font = Enum.Font.GothamBold
-_0xL_RageTextLabel.TextSize = 13
-_0xL_RageTextLabel.TextXAlignment = Enum.TextXAlignment.Center
-_0xL_RageTextLabel.Visible = false
+local RageTextLabel = Instance.new(_0xE("\x0e\x3f\x22\x2e\x16\x3b\x38\x3f\x36"), RageUIGui)
+RageTextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+RageTextLabel.Position = UDim2.new(0.5, 0, 0.5, 25)
+RageTextLabel.Size = UDim2.new(0, 200, 0, 25)
+RageTextLabel.BackgroundTransparency = 1
+RageTextLabel.Text = _0xE("\x28\x35\x3d\x35\x38\x35\x2e")
+RageTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+RageTextLabel.TextStrokeTransparency = 0
+RageTextLabel.Font = Enum.Font.GothamBold
+RageTextLabel.TextSize = 13
+RageTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+RageTextLabel.Visible = false
 
-local _0xL_rageHue = 0
-local _0xL_rotAngle = 0
-_0xL_RunService.RenderStepped:Connect(function()
-    _0xL_RageTextLabel.Visible = _0xL_CrosshairContainer.Visible
-    if _0xL_CrosshairContainer.Visible then
-        _0xL_rageHue = (_0xL_rageHue + 2) % 360
-        local _0xL_rainbowColor = Color3.fromHSV(_0xL_rageHue / 360, 1, 1)
-        for _, _0xL_item in ipairs(_0xL_crosshairLines) do
-            _0xL_item.Line.BackgroundColor3 = _0xL_rainbowColor
+local rageHue = 0
+local rotAngle = 0
+RunService.RenderStepped:Connect(function()
+    RageTextLabel.Visible = CrosshairContainer.Visible
+    if CrosshairContainer.Visible then
+        rageHue = (rageHue + 2) % 360
+        local rainbowColor = Color3.fromHSV(rageHue / 360, 1, 1)
+        for _, item in ipairs(crosshairLines) do
+            item.Line.BackgroundColor3 = rainbowColor
         end
-        _0xL_RageTextLabel.TextColor3 = _0xL_rainbowColor
+        RageTextLabel.TextColor3 = rainbowColor
 
-        _0xL_rotAngle = (_0xL_rotAngle + 4) % 360
-        _0xL_CrosshairContainer.Rotation = _0xL_rotAngle
+        rotAngle = (rotAngle + 4) % 360
+        CrosshairContainer.Rotation = rotAngle
 
-        local _0xL_timeVal = tick() * 5
-        local _0xL_pulse = (math.sin(_0xL_timeVal) + 1) * 0.5 
+        local timeVal = tick() * 5
+        local pulse = (math.sin(timeVal) + 1) * 0.5 
         
-        _0xL_crosshairLines[1].Line.Position = UDim2.new(0, math.floor(3 + _0xL_pulse * 6), 0.5, -1)
-        _0xL_crosshairLines[2].Line.Position = UDim2.new(1, math.floor(-11 - _0xL_pulse * 6), 0.5, -1)
-        _0xL_crosshairLines[3].Line.Position = UDim2.new(0.5, -1, 0, math.floor(3 + _0xL_pulse * 6))
-        _0xL_crosshairLines[4].Line.Position = UDim2.new(0.5, -1, 1, math.floor(-11 - _0xL_pulse * 6))
+        crosshairLines[1].Line.Position = UDim2.new(0, math.floor(3 + pulse * 6), 0.5, -1)
+        crosshairLines[2].Line.Position = UDim2.new(1, math.floor(-11 - pulse * 6), 0.5, -1)
+        crosshairLines[3].Line.Position = UDim2.new(0.5, -1, 0, math.floor(3 + pulse * 6))
+        crosshairLines[4].Line.Position = UDim2.new(0.5, -1, 1, math.floor(-11 - pulse * 6))
     end
 end)
 
@@ -137,67 +119,67 @@ local _halmu = {
 local FighterCtrl, EnumLib, useItemRemote, ssEnum
 
 task.spawn(function()
-    local _0x_okF, _0x_fc = pcall(function()
-        return require(_0xL_LocalPlayer.PlayerScripts.Controllers.FighterController)
+    local okF, fc = pcall(function()
+        return require(LocalPlayer.PlayerScripts.Controllers.FighterController)
     end)
-    if _0x_okF then FighterCtrl = _0x_fc end
+    if okF then FighterCtrl = fc end
 
-    local _0x_okE, _0x_el = pcall(function()
-        return require(_0xL_ReplicatedStorage.Modules.EnumLibrary)
+    local okE, el = pcall(function()
+        return require(ReplicatedStorage.Modules.EnumLibrary)
     end)
-    if _0x_okE then EnumLib = _0x_el end
+    if okE then EnumLib = el end
 
     pcall(function()
-        useItemRemote = _0xL_ReplicatedStorage.Remotes.Replication.Fighter.UseItem
+        useItemRemote = ReplicatedStorage.Remotes.Replication.Fighter.UseItem
     end)
     pcall(function()
-        if EnumLib then ssEnum = EnumLib:ToEnum("StartShooting") end
+        if EnumLib then ssEnum = EnumLib:ToEnum(_0xE("\x09\x2e\x3b\x28\x2e\x09\x32\x35\x35\x2e\x33\x34\x3d")) end
     end)
     _halmu.ready = true
 end)
 
-local function isSameTeam(_0x_plr)
-    local _0x_a = _0xL_LocalPlayer:GetAttribute("TeamID")
-    local _0x_b = _0x_plr:GetAttribute("TeamID")
-    if _0x_a == nil or _0x_b == nil then return false end
-    return _0x_a == _0x_b
+local function isSameTeam(plr)
+    local a = plr:GetAttribute(_0xE("\x0e\x3f\x3b\x37\x13\x1e"))
+    local b = LocalPlayer:GetAttribute(_0xE("\x0e\x3f\x3b\x37\x13\x1e"))
+    if a == nil or b == nil then return false end
+    return a == b
 end
 
-local function getRageHead(_0x_char)
-    if not _0x_char then return nil end
-    return _0x_char:FindFirstChild("HitboxHead")
-        or _0x_char:FindFirstChild("HitboxHeadSmall")
-        or _0x_char:FindFirstChild("Head")
+local function getRageHead(char)
+    if not char then return nil end
+    return char:FindFirstChild(_0xE("\x12\x33\x2e\x38\x35\x22\x12\x3f\x3b\x3e"))
+        or char:FindFirstChild(_0xE("\x12\x33\x2e\x38\x35\x22\x12\x3f\x3b\x3e\x09\x37\x3b\x36\x36"))
+        or char:FindFirstChild(_0xE("\x12\x3f\x3b\x3e"))
 end
 
 local function getObjId()
     if not (FighterCtrl and FighterCtrl.LocalFighter) then return nil end
-    local _0x_item = FighterCtrl.LocalFighter.EquippedItem
-    if not _0x_item then return nil end
-    local _0x_ok, _0x_id = pcall(function() return _0x_item:Get("ObjectID") end)
-    if _0x_ok and _0x_id then return _0x_id end
-    _0x_ok, _0x_id = pcall(function() return _0x_item.Data and _0x_item.Data.ObjectID end)
-    return _0x_ok and _0x_id or nil
+    local item = FighterCtrl.LocalFighter.EquippedItem
+    if not item then return nil end
+    local ok, id = pcall(function() return item:Get(_0xE("\x15\x38\x30\x3f\x39\x2e\x13\x1e")) end)
+    if ok and id then return id end
+    ok, id = pcall(function() return item.Data and item.Data.ObjectID end)
+    return ok and id or nil
 end
 
-local function buildShot(_0x_originPos, _0x_targetPart)
-    local _0x_targetPos = _0x_targetPart.Position
-    local _0x_lookCF = CFrame.lookAt(_0x_originPos, _0x_targetPos)
-    local _0x_lX, _0x_lY, _0x_lZ = _0x_lookCF:ToOrientation()
-    local _0x_originStruct = {
-        [utf8.char(0)] = _0x_originPos.X, [utf8.char(1)] = _0x_originPos.Y, [utf8.char(2)] = _0x_originPos.Z,
-        [utf8.char(3)] = _0x_lX, [utf8.char(4)] = _0x_lY, [utf8.char(5)] = _0x_lZ,
+local function buildShot(originPos, targetPart)
+    local targetPos = targetPart.Position
+    local lookCF = CFrame.lookAt(originPos, targetPos)
+    local lX, lY, lZ = lookCF:ToOrientation()
+    local originStruct = {
+        [utf8.char(0)] = originPos.X, [utf8.char(1)] = originPos.Y, [utf8.char(2)] = originPos.Z,
+        [utf8.char(3)] = lX, [utf8.char(4)] = lY, [utf8.char(5)] = lZ,
     }
-    local _0x_relCF = _0x_targetPart.CFrame:ToObjectSpace(CFrame.new(_0x_targetPos))
-    local _0x_rX, _0x_rY, _0x_rZ = _0x_relCF:ToOrientation()
+    local relCF = targetPart.CFrame:ToObjectSpace(CFrame.new(targetPos))
+    local rX, rY, rZ = relCF:ToOrientation()
     return {
         [utf8.char(1)] = {
-            [utf8.char(0)] = _0x_originStruct,
-            [utf8.char(1)] = _0x_originStruct,
-            [utf8.char(2)] = _0x_targetPart,
+            [utf8.char(0)] = originStruct,
+            [utf8.char(1)] = originStruct,
+            [utf8.char(2)] = targetPart,
             [utf8.char(3)] = {
-                [utf8.char(0)] = _0x_relCF.X, [utf8.char(1)] = _0x_relCF.Y, [utf8.char(2)] = _0x_relCF.Z,
-                [utf8.char(3)] = _0x_rX, [utf8.char(4)] = _0x_rY, [utf8.char(5)] = _0x_rZ,
+                [utf8.char(0)] = relCF.X, [utf8.char(1)] = relCF.Y, [utf8.char(2)] = relCF.Z,
+                [utf8.char(3)] = rX, [utf8.char(4)] = rY, [utf8.char(5)] = rZ,
             },
         },
     }
@@ -205,28 +187,28 @@ end
 
 local function startTargetFinder()
     if _halmu.findConn then return end
-    _halmu.findConn = _0xL_RunService.Heartbeat:Connect(function()
+    _halmu.findConn = RunService.Heartbeat:Connect(function()
         if not _halmu.rageEnabled then
             _halmu.currentTarget = nil
             return
         end
-        local _0x_ref = _0xL_LocalPlayer.Character and _0xL_LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local _0x_refPos = _0x_ref and _0x_ref.Position or Vector3.zero
-        local _0x_closest, _0x_best = nil, math.huge
-        for _, _0x_plr in ipairs(_0xL_Players:GetPlayers()) do
-            if _0x_plr ~= _0xL_LocalPlayer and _0x_plr.Character and not isSameTeam(_0x_plr) then
-                local _0x_hrp = _0x_plr.Character:FindFirstChild("HumanoidRootPart")
-                local _0x_hum = _0x_plr.Character:FindFirstChildOfClass("Humanoid")
-                if _0x_hrp and _0x_hum and _0x_hum.Health > 0 then
-                    local _0x_d = (Vector3.new(_0x_refPos.X, 0, _0x_refPos.Z) - Vector3.new(_0x_hrp.Position.X, 0, _0x_hrp.Position.Z)).Magnitude
-                    if _0x_d < _0x_best then
-                        _0x_best = _0x_d
-                        _0x_closest = _0x_plr
+        local ref = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e"))
+        local refPos = ref and ref.Position or Vector3.zero
+        local closest, best = nil, math.huge
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and not isSameTeam(plr) then
+                local hrp = plr.Character:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e"))
+                local hum = plr.Character:FindFirstChildOfClass(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e"))
+                if hrp and hum and hum.Health > 0 then
+                    local d = (Vector3.new(refPos.X, 0, refPos.Z) - Vector3.new(hrp.Position.X, 0, hrp.Position.Z)).Magnitude
+                    if d < best then
+                        best = d
+                        closest = plr
                     end
                 end
             end
         end
-        _halmu.currentTarget = _0x_closest and getRageHead(_0x_closest.Character) or nil
+        _halmu.currentTarget = closest and getRageHead(closest.Character) or nil
     end)
 end
 
@@ -237,48 +219,48 @@ local function startRageFire()
     end
     if not _halmu.rageEnabled then return end
 
-    local _0x_cachedId = nil
-    _halmu.rageConn = _0xL_RunService.Heartbeat:Connect(function()
+    local cachedId = nil
+    _halmu.rageConn = RunService.Heartbeat:Connect(function()
         if not _halmu.rageEnabled then return end
         if not useItemRemote or not ssEnum then return end
-        local _0x_target = _halmu.currentTarget
-        if not _0x_target or not _0x_target.Parent then return end
+        local target = _halmu.currentTarget
+        if not target or not target.Parent then return end
 
-        local _0x_objId = getObjId()
-        if _0x_objId then _0x_cachedId = _0x_objId else _0x_objId = _0x_cachedId end
-        if not _0x_objId then return end
+        local objId = getObjId()
+        if objId then cachedId = objId else objId = cachedId end
+        if not objId then return end
 
-        local _0x_origin = _0x_target.Position + Vector3.new(0, 0.1, 0)
+        local origin = target.Position + Vector3.new(0, 0.1, 0)
         pcall(function()
-            useItemRemote:FireServer(_0x_objId, ssEnum, buildShot(_0x_origin, _0x_target), nil)
+            useItemRemote:FireServer(objId, ssEnum, buildShot(origin, target), nil)
         end)
     end)
 end
 
-local restoreName = "cg_halmu_restore"
-_0xL_RunService.Heartbeat:Connect(function()
+local restoreName = _0xE("\x39\x3d\x05\x32\x3b\x36\x37\x2f\x05\x28\x3f\x29\x2e\x35\x28\x3f")
+RunService.Heartbeat:Connect(function()
     if not (_halmu.rageEnabled and _halmu.desyncEnabled and _halmu.currentTarget) then return end
-    local _0x_hrp = _0xL_LocalPlayer.Character and _0xL_LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not _0x_hrp then return end
-    _halmu.RealCFrame = _0x_hrp.CFrame
-    local _0x_tp = _halmu.currentTarget.Position
-    _0x_hrp.CFrame = CFrame.new(_0x_tp + Vector3.new(0, _halmu.desyncDist, 0), _0x_tp)
-    _0x_hrp.AssemblyLinearVelocity = Vector3.zero
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e"))
+    if not hrp then return end
+    _halmu.RealCFrame = hrp.CFrame
+    local tp = _halmu.currentTarget.Position
+    hrp.CFrame = CFrame.new(tp + Vector3.new(0, _halmu.desyncDist, 0), tp)
+    hrp.AssemblyLinearVelocity = Vector3.zero
 end)
 
-_0xL_RunService:BindToRenderStep(restoreName, 150, function()
-    local _0x_hrp = _0xL_LocalPlayer.Character and _0xL_LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if _0x_hrp and _halmu.RealCFrame then
-        _0x_hrp.CFrame = _halmu.RealCFrame
-        _0x_hrp.AssemblyLinearVelocity = Vector3.zero
+RunService:BindToRenderStep(restoreName, 150, function()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e"))
+    if hrp and _halmu.RealCFrame then
+        hrp.CFrame = _halmu.RealCFrame
+        hrp.AssemblyLinearVelocity = Vector3.zero
         _halmu.RealCFrame = nil
     end
 end)
 
-local function setRage(_0x_on)
-    _halmu.rageEnabled = _0x_on and true or false
-    _0xL_CrosshairContainer.Visible = _halmu.rageEnabled
-    if _0x_on then
+local function setRage(on)
+    _halmu.rageEnabled = on and true or false
+    CrosshairContainer.Visible = _halmu.rageEnabled
+    if on then
         startTargetFinder()
         startRageFire()
     else
@@ -290,44 +272,44 @@ local function setRage(_0x_on)
     end
 end
 
-local _0xL_MainGroup = _0xL_Tabs.Main:AddLeftGroupbox('Combat')
+local MainGroup = Tabs.Main:AddLeftGroupbox(_0xE("\x19\x35\x37\x38\x3b\x2e"))
 
-_0xL_MainGroup:AddToggle('Ragebot', {
-    Text = 'Ragebot',
+MainGroup:AddToggle(_0xE("\x08\x3b\x3d\x3f\x38\x35\x2e"), {
+    Text = _0xE("\x08\x3b\x3d\x3f\x38\x35\x2e"),
     Default = false,
-    Tooltip = 'Ragebot enabled',
-    Callback = function(_0x_Value)
-        setRage(_0x_Value)
+    Tooltip = _0xE("\x08\x3b\x3d\x3f\x38\x35\x2e\x20\x3f\x34\x3b\x38\x36\x3f\x3e"),
+    Callback = function(Value)
+        setRage(Value)
     end
 })
 
-_0xL_MainGroup:AddToggle('DesyncToggle', {
-    Text = 'Desync',
+MainGroup:AddToggle(_0xE("\x1e\x3f\x29\x23\x34\x39\x0e\x35\x3d\x3d\x36\x3f"), {
+    Text = _0xE("\x1e\x3f\x29\x23\x34\x39"),
     Default = false,
-    Tooltip = 'Desync',
-    Callback = function(_0x_Value)
-        _halmu.desyncEnabled = _0x_Value
+    Tooltip = _0xE("\x1e\x3f\x29\x23\x34\x39"),
+    Callback = function(Value)
+        _halmu.desyncEnabled = Value
     end
 })
 
-_0xL_MainGroup:AddToggle('VoidSpamToggle', {
-    Text = 'Void Spam',
+MainGroup:AddToggle(_0xE("\x0c\x35\x33\x3e\x09\x2a\x3b\x37\x0e\x35\x3d\x3d\x36\x3f"), {
+    Text = _0xE("\x0c\x35\x33\x3e\x20\x09\x2a\x3b\x37"),
     Default = false,
-    Tooltip = 'Void Spam enabled',
-    Callback = function(_0x_Value)
-        getgenv().VoidSpamEnabled = _0x_Value
+    Tooltip = _0xE("\x0c\x35\x33\x3e\x20\x09\x2a\x3b\x37\x20\x3f\x34\x3b\x38\x36\x3f\x3e"),
+    Callback = function(Value)
+        getgenv().VoidSpamEnabled = Value
     end
 })
 
-_0xL_MainGroup:AddSlider('VoidHideSlider', {
-    Text = 'Void Hide',
+MainGroup:AddSlider(_0xE("\x0c\x35\x33\x3e\x12\x33\x3e\x3f\x09\x36\x33\x3e\x3f\x28"), {
+    Text = _0xE("\x0c\x35\x33\x3e\x20\x12\x33\x3e\x3f"),
     Default = 0.1,
     Min = 0.01,
     Max = 1.0,
     Rounding = 2,
     Compact = false,
-    Callback = function(_0x_Value)
-        getgenv().VoidHideValue = _0x_Value
+    Callback = function(Value)
+        getgenv().VoidHideValue = Value
     end
 })
 
@@ -335,70 +317,70 @@ getgenv().VoidSpamEnabled = false
 getgenv().VoidHideValue = 0.1
 
 task.spawn(function()
-    local _0x_lastAttackTime = 0
+    local lastAttackTime = 0
 
-    _0xL_RunService.Heartbeat:Connect(function()
+    RunService.Heartbeat:Connect(function()
         if not getgenv().VoidSpamEnabled then return end
 
-        local _0x_char = _0xL_LocalPlayer.Character
-        if not _0x_char then return end
-        local _0x_root = _0x_char:FindFirstChild("HumanoidRootPart")
-        if not _0x_root then return end
+        local char = LocalPlayer.Character
+        if not char then return end
+        local root = char:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e"))
+        if not root then return end
 
-        local _0x_originalCFrame = _0x_root.CFrame
-        local _0x_voidCFrame = _0x_originalCFrame + Vector3.new(0, 10000, 0)
+        local originalCFrame = root.CFrame
+        local voidCFrame = originalCFrame + Vector3.new(0, 10000, 0)
 
-        local _0x_targetPart = _halmu.currentTarget
-        local _0x_currentTime = tick()
-        local _0x_hideInterval = getgenv().VoidHideValue or 0.1
+        local targetPart = _halmu.currentTarget
+        local currentTime = tick()
+        local hideInterval = getgenv().VoidHideValue or 0.1
 
-        if _0x_targetPart and _0x_targetPart.Parent and (_0x_currentTime - _0x_lastAttackTime >= _0x_hideInterval) then
-            _0x_lastAttackTime = _0x_currentTime
-            _0x_root.CFrame = _0x_targetPart.CFrame
+        if targetPart and targetPart.Parent and (currentTime - lastAttackTime >= hideInterval) then
+            lastAttackTime = currentTime
+            root.CFrame = targetPart.CFrame
 
-            _0xL_RunService:BindToRenderStep("__void_restore", 1, function()
-                _0x_root.CFrame = _0x_voidCFrame
-                _0xL_RunService:UnbindFromRenderStep("__void_restore")
+            RunService:BindToRenderStep(_0xE("\x05\x05\x2c\x3f\x33\x3e\x05\x28\x3f\x29\x2e\x3f\x28\x3f"), 1, function()
+                root.CFrame = voidCFrame
+                RunService:UnbindFromRenderStep(_0xE("\x05\x05\x2c\x3f\x33\x3e\x05\x28\x3f\x29\x2e\x3f\x28\x3f"))
             end)
             return
         end
 
-        _0x_root.CFrame = _0x_voidCFrame
-        _0xL_RunService:BindToRenderStep("__void_hold", 1, function()
-            _0x_root.CFrame = _0x_originalCFrame
-            _0xL_RunService:UnbindFromRenderStep("__void_hold")
+        root.CFrame = voidCFrame
+        RunService:BindToRenderStep(_0xE("\x05\x05\x2c\x3f\x33\x3e\x05\x32\x3f\x36\x3e"), 1, function()
+            root.CFrame = originalCFrame
+            RunService:UnbindFromRenderStep(_0xE("\x05\x05\x2c\x3f\x33\x3e\x05\x32\x3f\x36\x3e"))
         end)
     end)
 end)
 
-local _0x_originalWeaponValues = {}
+local originalWeaponValues = {}
 
-_0xL_MainGroup:AddToggle('RivalsNoCDToggle', {
-    Text = 'No Cooldown',
+MainGroup:AddToggle(_0xE("\x08\x33\x2c\x3b\x36\x29\x14\x35\x19\x1e\x0e\x35\x3d\x3d\x36\x3f"), {
+    Text = _0xE("\x14\x3f\x20\x19\x3f\x35\x36\x3e\x3f\x2d\x34"),
     Default = false,
-    Tooltip = 'No Cooldown',
-    Callback = function(_0x_Value)
-        getgenv().RivalsNoCD = _0x_Value
-        if _0x_Value then
+    Tooltip = _0xE("\x14\x3f\x20\x19\x3f\x35\x36\x3e\x3f\x2d\x34"),
+    Callback = function(Value)
+        getgenv().RivalsNoCD = Value
+        if Value then
             task.spawn(function()
                 while getgenv().RivalsNoCD do
                     task.wait(2)
                     pcall(function()
-                        for _, _0x_v in pairs(getgc(true)) do
-                            if type(_0x_v) == "table" then
-                                if rawget(_0x_v, "ShootCooldown") and not _0x_originalWeaponValues[_0x_v] then
-                                    _0x_originalWeaponValues[_0x_v] = {Key = "ShootCooldown", Val = _0x_v.ShootCooldown}
+                        for _, v in pairs(getgc(true)) do
+                            if type(v) == _0xE("\x2e\x3b\x38\x36\x3f") then
+                                if rawget(v, _0xE("\x09\x32\x3f\x3f\x2e\x19\x3f\x35\x36\x3e\x3f\x2d\x34")) and not originalWeaponValues[v] then
+                                    originalWeaponValues[v] = {Key = _0xE("\x09\x32\x3f\x3f\x2e\x19\x3f\x35\x36\x3e\x3f\x2d\x34"), Val = v.ShootCooldown}
                                 end
-                                if rawget(_0x_v, "FireRate") and not _0x_originalWeaponValues[_0x_v] then
-                                    _0x_originalWeaponValues[_0x_v] = {Key = "FireRate", Val = _0x_v.FireRate}
+                                if rawget(v, _0xE("\x1c\x33\x28\x3f\x08\x3b\x2e\x3f")) and not originalWeaponValues[v] then
+                                    originalWeaponValues[v] = {Key = _0xE("\x1c\x33\x28\x3f\x08\x3b\x2e\x3f"), Val = v.FireRate}
                                 end
-                                if rawget(_0x_v, "Cooldown") and not _0x_originalWeaponValues[_0x_v] then
-                                    _0x_originalWeaponValues[_0x_v] = {Key = "Cooldown", Val = _0x_v.Cooldown}
+                                if rawget(v, _0xE("\x19\x3f\x35\x36\x3e\x3f\x2d\x34")) and not originalWeaponValues[v] then
+                                    originalWeaponValues[v] = {Key = _0xE("\x19\x3f\x35\x36\x3e\x3f\x2d\x34"), Val = v.Cooldown}
                                 end
 
-                                if rawget(_0x_v, "ShootCooldown") then _0x_v.ShootCooldown = 0 end
-                                if rawget(_0x_v, "FireRate") then _0x_v.FireRate = 0 end
-                                if rawget(_0x_v, "Cooldown") then _0x_v.Cooldown = 0 end
+                                if rawget(v, _0xE("\x09\x32\x3f\x3f\x2e\x19\x3f\x35\x36\x3e\x3f\x2d\x34")) then v.ShootCooldown = 0 end
+                                if rawget(v, _0xE("\x1c\x33\x28\x3f\x08\x3b\x2e\x3f")) then v.FireRate = 0 end
+                                if rawget(v, _0xE("\x19\x3f\x35\x36\x3e\x3f\x2d\x34")) then v.Cooldown = 0 end
                             end
                         end
                     end)
@@ -406,209 +388,209 @@ _0xL_MainGroup:AddToggle('RivalsNoCDToggle', {
             end)
         else
             pcall(function()
-                for _0x_tbl, _0x_info in pairs(_0x_originalWeaponValues) do
-                    if _0x_tbl and type(_0x_tbl) == "table" then
-                        _0x_tbl[_0x_info.Key] = _0x_info.Val
+                for tbl, info in pairs(originalWeaponValues) do
+                    if tbl and type(tbl) == _0xE("\x2e\x3b\x38\x36\x3f") then
+                        tbl[info.Key] = info.Val
                     end
                 end
-                table.clear(_0x_originalWeaponValues)
+                table.clear(originalWeaponValues)
             end)
         end
     end
 })
 
-local _0xL_AutoShotGroup = _0xL_Tabs.Main:AddLeftGroupbox('360 Auto Shot')
+local AutoShotGroup = Tabs.Main:AddLeftGroupbox(_0xE("\x69\x6c\x6a\x20\x1b\x2f\x2e\x3f\x20\x09\x32\x3f\x2e"))
 
-_0xL_AutoShotGroup:AddToggle('Enable360AutoShot', {
-    Text = 'Enable',
+AutoShotGroup:AddToggle(_0xE("\x1f\x34\x3b\x38\x36\x3f\x69\x6c\x6a\x1b\x2f\x2e\x3f\x09\x32\x3f\x2e"), {
+    Text = _0xE("\x1f\x34\x3b\x38\x36\x3f"),
     Default = false,
-    Tooltip = 'Enable 360 Auto Shot',
-    Callback = function(_0x_Value)
-        setRage(_0x_Value)
+    Tooltip = _0xE("\x1f\x34\x3b\x38\x36\x3f\x20\x69\x6c\x6a\x20\x1b\x2f\x2e\x3f\x20\x09\x32\x3f\x2e"),
+    Callback = function(Value)
+        setRage(Value)
     end
 })
 
-local _0xL_AimbotGroup = _0xL_Tabs.Main:AddRightGroupbox('Aimbot')
-local _0xL_Camera = workspace.CurrentCamera
+local AimbotGroup = Tabs.Main:AddRightGroupbox(_0xE("\x1b\x33\x37\x38\x35\x2e"))
+local Camera = workspace.CurrentCamera
 
-local _0xL_FOVGui = Instance.new("ScreenGui")
-_0xL_FOVGui.Name = "HoNyangFOV"
-_0xL_FOVGui.ResetOnSpawn = false
-_0xL_FOVGui.Parent = _0xL_PlayerGui
+local FOVGui = Instance.new(_0xE("\x09\x39\x28\x3f\x3f\x34\x1d\x2f\x33"))
+FOVGui.Name = _0xE("\x12\x35\x14\x23\x34\x31\x1c\x15\x0c")
+FOVGui.ResetOnSpawn = false
+FOVGui.Parent = PlayerGui
 
-local _0xL_FOVFrame = Instance.new("Frame", _0xL_FOVGui)
-_0xL_FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-_0xL_FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-_0xL_FOVFrame.BackgroundTransparency = 1
-_0xL_FOVFrame.Visible = false
+local FOVFrame = Instance.new(_0xE("\x1c\x28\x3b\x37\x3f"), FOVGui)
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Visible = false
 
-local _0xL_UICorner = Instance.new("UICorner", _0xL_FOVFrame)
-_0xL_UICorner.CornerRadius = UDim.new(1, 0)
+local UICorner = Instance.new(_0xE("\x0f\x13\x19\x35\x28\x34\x3f\x28"), FOVFrame)
+UICorner.CornerRadius = UDim.new(1, 0)
 
-local _0xL_FOVStroke = Instance.new("UIStroke", _0xL_FOVFrame)
-_0xL_FOVStroke.Thickness = 2
+local FOVStroke = Instance.new(_0xE("\x0f\x13\x09\x2e\x28\x35\x31\x3f"), FOVFrame)
+FOVStroke.Thickness = 2
 
-local _0xL_hue = 0
-_0xL_RunService.RenderStepped:Connect(function()
-    _0xL_hue = (_0xL_hue + 2) % 360
-    _0xL_FOVStroke.Color = Color3.fromHSV(_0xL_hue / 360, 1, 1)
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue + 2) % 360
+    FOVStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
 end)
 
-_0xL_AimbotGroup:AddToggle('AimbotToggle', { Text = 'Aimbot enabled', Default = false })
-_0xL_AimbotGroup:AddToggle('ShowFOVToggle', {
-    Text = 'FOV',
+AimbotGroup:AddToggle(_0xE("\x1b\x33\x37\x38\x35\x2e\x0e\x35\x3d\x3d\x36\x3f"), { Text = _0xE("\x1b\x33\x37\x38\x35\x2e\x20\x3f\x34\x3b\x38\x36\x3f\x3e"), Default = false })
+AimbotGroup:AddToggle(_0xE("\x09\x32\x3f\x2d\x1c\x15\x0c\x0e\x35\x3d\x3d\x36\x3f"), {
+    Text = _0xE("\x1c\x15\x0c"),
     Default = false,
-    Callback = function(_0x_Value) _0xL_FOVFrame.Visible = _0x_Value end
+    Callback = function(Value) FOVFrame.Visible = Value end
 })
 
-_0xL_AimbotGroup:AddSlider('FOVSlider', {
-    Text = 'FOV size',
+AimbotGroup:AddSlider(_0xE("\x1c\x15\x0c\x09\x36\x33\x3e\x3f\x28"), {
+    Text = _0xE("\x1c\x15\x0c\x20\x29\x33\x20\x3f"),
     Default = 150, Min = 50, Max = 500, Rounding = 0,
-    Callback = function(_0x_Value)
-        _0xL_FOVFrame.Size = UDim2.new(0, _0x_Value * 2, 0, _0x_Value * 2)
+    Callback = function(Value)
+        FOVFrame.Size = UDim2.new(0, Value * 2, 0, Value * 2)
     end
 })
 
-_0xL_FOVFrame.Size = UDim2.new(0, _0xL_Options.FOVSlider.Value * 2, 0, _0xL_Options.FOVSlider.Value * 2)
+FOVFrame.Size = UDim2.new(0, Options.FOVSlider.Value * 2, 0, Options.FOVSlider.Value * 2)
 
-_0xL_RunService:BindToRenderStep("HoNyangAimbot", Enum.RenderPriority.Camera.Value + 1, function()
-    if not (_0xL_Toggles and _0xL_Toggles.AimbotToggle and _0xL_Toggles.AimbotToggle.Value) then return end
+RunService:BindToRenderStep(_0xE("\x12\x35\x14\x23\x34\x31\x1b\x33\x37\x38\x35\x2e"), Enum.RenderPriority.Camera.Value + 1, function()
+    if not (Toggles and Toggles.AimbotToggle and Toggles.AimbotToggle.Value) then return end
     
-    local _0x_char = _0xL_LocalPlayer.Character
-    if not _0x_char or not _0x_char:FindFirstChild("HumanoidRootPart") then return end
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e")) then return end
     
-    local _0x_currentFOV = _0xL_Options.FOVSlider.Value
-    local _0x_nearestTarget = nil
-    local _0x_shortestDistance = math.huge
+    local currentFOV = Options.FOVSlider.Value
+    local nearestTarget = nil
+    local shortestDistance = math.huge
     
-    for _, _0x_player in ipairs(_0xL_Players:GetPlayers()) do
-        if _0x_player ~= _0xL_LocalPlayer and _0x_player.Character then
-            local _0x_enemyChar = _0x_player.Character
-            if _0x_enemyChar:FindFirstChildOfClass("ForceField") then continue end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local enemyChar = player.Character
+            if enemyChar:FindFirstChildOfClass(_0xE("\x1c\x35\x28\x39\x3f\x1c\x33\x3f\x36\x3e")) then continue end
 
-            local _0x_humanoid = _0x_enemyChar:FindFirstChildOfClass("Humanoid")
-            local _0x_linkHead = _0x_enemyChar:FindFirstChild("Head")
-            if _0x_humanoid and _0x_humanoid.Health > 0 and _0x_linkHead then
-                local _0x_pos, _0x_onScreen = _0xL_Camera:WorldToViewportPoint(_0x_linkHead.Position)
-                local _0x_distance = (Vector2.new(_0x_pos.X, _0x_pos.Y) - Vector2.new(_0xL_Camera.ViewportSize.X/2, _0xL_Camera.ViewportSize.Y/2)).Magnitude
-                if _0x_onScreen and _0x_distance <= _0x_currentFOV and _0x_distance < _0x_shortestDistance then
-                    _0x_shortestDistance = _0x_distance
-                    _0x_nearestTarget = _0x_linkHead
+            local humanoid = enemyChar:FindFirstChildOfClass(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e"))
+            local linkHead = enemyChar:FindFirstChild(_0xE("\x12\x3f\x3b\x3e"))
+            if humanoid and humanoid.Health > 0 and linkHead then
+                local pos, onScreen = Camera:WorldToViewportPoint(linkHead.Position)
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if onScreen and distance <= currentFOV and distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestTarget = linkHead
                 end
             end
         end
     end
     
-    if _0x_nearestTarget then
-        _0xL_Camera.CFrame = CFrame.lookAt(_0xL_Camera.CFrame.Position, _0x_nearestTarget.Position)
+    if nearestTarget then
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, nearestTarget.Position)
     end
 end)
 
-local _0xL_ESPGroup = _0xL_Tabs.Visuals:AddLeftGroupbox('ESP')
+local ESPGroup = Tabs.Visuals:AddLeftGroupbox(_0xE("\x1f\x09\x0a"))
 
-_0xL_ESPGroup:AddToggle('ESPBox', { Text = 'Box ESP', Default = false })
-_0xL_ESPGroup:AddToggle('ESPName', { Text = 'Name ESP', Default = false })
-_0xL_ESPGroup:AddToggle('ESPHealth', { Text = 'Health ESP', Default = false })
-_0xL_ESPGroup:AddToggle('ESPDistance', { Text = 'Distance ESP', Default = false })
-_0xL_ESPGroup:AddToggle('ESPTracer', { Text = 'Tracer ESP', Default = false })
-_0xL_ESPGroup:AddToggle('ESPSkeleton', { Text = 'Skeleton ESP', Default = false })
-_0xL_ESPGroup:AddToggle('ESPChams', { Text = 'Chams ESP', Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x18\x35\x22"), { Text = _0xE("\x18\x35\x22\x20\x1f\x09\x0a"), Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x14\x3b\x37\x3f"), { Text = _0xE("\x14\x3b\x37\x3f\x20\x1f\x09\x0a"), Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x12\x3f\x3b\x36\x2e\x32"), { Text = _0xE("\x12\x3f\x3b\x36\x2e\x32\x20\x1f\x09\x0a"), Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x19\x33\x29\x2e\x3b\x34\x39\x3f"), { Text = _0xE("\x19\x33\x29\x2e\x3b\x34\x39\x3f\x20\x1f\x09\x0a"), Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x14\x28\x3b\x39\x3f\x28"), { Text = _0xE("\x14\x28\x3b\x39\x3f\x28\x20\x1f\x09\x0a"), Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x09\x31\x3f\x36\x3f\x2e\x35\x34"), { Text = _0xE("\x09\x31\x3f\x36\x3f\x2e\x35\x34\x20\x1f\x09\x0a"), Default = false })
+ESPGroup:AddToggle(_0xE("\x1f\x09\x0a\x19\x38\x3b\x37\x29"), { Text = _0xE("\x19\x38\x3b\x37\x29\x20\x1f\x09\x0a"), Default = false })
 
-local _0xL_SkyboxGroup = _0xL_Tabs.Visuals:AddRightGroupbox('Skybox')
+local SkyboxGroup = Tabs.Visuals:AddRightGroupbox(_0xE("\x09\x31\x23\x38\x35\x28"))
 
 local function GetSky()
-    local _0x_sky = _0xL_Lighting:FindFirstChildOfClass("Sky")
-    if not _0x_sky then
-        _0x_sky = Instance.new("Sky")
-        _0x_sky.Parent = _0xL_Lighting
+    local sky = Lighting:FindFirstChildOfClass(_0xE("\x09\x31\x23"))
+    if not sky then
+        sky = Instance.new(_0xE("\x09\x31\x23"))
+        sky.Parent = Lighting
     end
-    return _0x_sky
+    return sky
 end
 
-local _0xL_Presets = {
-    ["Purple Nebula"] = "rbxassetid://159454299",
-    ["Night Sky"] = "rbxassetid://12064107",
-    ["Pink Sunset"] = "rbxassetid://271042310",
-    ["Vaporwave"] = "rbxassetid://1417494402"
+local Presets = {
+    [_0xE("\x0a\x2f\x28\x2a\x36\x3f\x20\x1e\x3f\x38\x2f\x36\x3b")] = _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x6b\x6f\x61\x6f\x6e\x6c\x63\x6f"),
+    [_0xE("\x1e\x33\x3d\x38\x2e\x20\x09\x31\x23")] = _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x6b\x68\x6a\x6c\x6e\x6b\x60\x6d"),
+    [_0xE("\x0a\x33\x34\x31\x20\x09\x2f\x34\x29\x3f\x2e")] = _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x68\x6d\x6b\x60\x6e\x62\x61\x60"),
+    [_0xE("\x0c\x3b\x2a\x35\x28\x2d\x3b\x2c\x3f")] = _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x6b\x6e\x6b\x67\x61\x61\x6e\x6a\x62")
 }
 
-local function ApplySky(_0x_id)
-    local _0x_sky = GetSky()
-    _0x_sky.SkyboxBk, _0x_sky.SkyboxDn, _0x_sky.SkyboxFt, _0x_sky.SkyboxLf, _0x_sky.SkyboxRt, _0x_sky.SkyboxUp = _0x_id, _0x_id, _0x_id, _0x_id, _0x_id, _0x_id
+local function ApplySky(id)
+    local sky = GetSky()
+    sky.SkyboxBk, sky.SkyboxDn, sky.SkyboxFt, sky.SkyboxLf, sky.SkyboxRt, sky.SkyboxUp = id, id, id, id, id, id
 end
 
 local function RemoveSky()
-    local _0x_sky = _0xL_Lighting:FindFirstChildOfClass("Sky")
-    if _0x_sky then _0x_sky:Destroy() end
+    local sky = Lighting:FindFirstChildOfClass(_0xE("\x09\x31\x23"))
+    if sky then sky:Destroy() end
 end
 
-_0xL_SkyboxGroup:AddDropdown('SkyboxPresetDropdown', {
-    Values = { 'Disable', 'Purple Nebula', 'Night Sky', 'Pink Sunset', 'Vaporwave' },
+SkyboxGroup:AddDropdown(_0xE("\x09\x31\x23\x38\x35\x28\x00\x28\x3f\x29\x3f\x2e\x14\x28\x3f\x2a\x3e\x35\x2d\x34"), {
+    Values = { _0xE("\x14\x33\x29\x3b\x38\x36\x3f"), _0xE("\x0a\x2f\x28\x2a\x36\x3f\x20\x1e\x3f\x38\x2f\x36\x3b"), _0xE("\x1e\x33\x3d\x38\x2e\x20\x09\x31\x23"), _0xE("\x0a\x33\x34\x31\x20\x09\x2f\x34\x29\x3f\x2e"), _0xE("\x0c\x3b\x2a\x35\x28\x2d\x3b\x2c\x3f") },
     Default = 1,
-    Text = 'Presets',
-    Callback = function(_0x_Value)
-        if _0x_Value == 'Disable' then RemoveSky() elseif _0xL_Presets[_0x_Value] then ApplySky(_0xL_Presets[_0x_Value]) end
+    Text = _0xE("\x10\x28\x3f\x29\x3f\x2e\x29"),
+    Callback = function(Value)
+        if Value == _0xE("\x14\x33\x29\x3b\x38\x36\x3f") then RemoveSky() elseif Presets[Value] then ApplySky(Presets[Value]) end
     end
 })
 
-local _0xL_EmoteGroup = _0xL_Tabs.character:AddLeftGroupbox('Emote')
+local EmoteGroup = Tabs.character:AddLeftGroupbox(_0xE("\x1f\x37\x35\x2e\x3f"))
 
-local _0xL_EmoteEnabled = false
-local _0xL_emoteTrack = nil
-local _0xL_EMOTESPEED = 1
+local EmoteEnabled = false
+local emoteTrack = nil
+local EMOTESPEED = 1
 
-local _0xL_EMOTES = {
-    "rbxassetid://507771019",
-    "rbxassetid://507776043",
-    "rbxassetid://507777623",
-    "rbxassetid://3698339488",
-    "rbxassetid://92281817840531",
+local EMOTES = {
+    _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x6f\x60\x6d\x6d\x67\x61\x60\x63"),
+    _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x6f\x60\x6d\x6d\x6d\x60\x6e\x69"),
+    _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x6f\x60\x6d\x6d\x6d\x6d\x6c\x69"),
+    _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x69\x6c\x63\x62\x69\x69\x6e\x62\x62"),
+    _0xE("\x28\x38\x28\x3b\x29\x29\x3f\x2e\x33\x34\x6a\x75\x75\x63\x68\x68\x62\x61\x62\x61\x67\x60\x6f\x69\x61"),
 }
 
 local function stopEmote()
-    _0xL_EmoteEnabled = false
-    if _0xL_emoteTrack then
-        pcall(function() _0xL_emoteTrack:Stop() end)
-        _0xL_emoteTrack = nil
+    EmoteEnabled = false
+    if emoteTrack then
+        pcall(function() emoteTrack:Stop() end)
+        emoteTrack = nil
     end
-    local _0x_char = _0xL_LocalPlayer.Character
-    local _0x_hum = _0x_char and _0x_char:FindFirstChildOfClass("Humanoid")
-    if _0x_hum then
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e"))
+    if hum then
         pcall(function()
-            for _, _0x_t in ipairs(_0x_hum:GetPlayingAnimationTracks()) do
-                _0x_t:Stop()
+            for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
+                t:Stop()
             end
         end)
     end
 end
 
-local function playEmote(_0x_char)
-    if not _0xL_EmoteEnabled then return end
-    _0x_char = _0x_char or _0xL_LocalPlayer.Character
-    if not _0x_char then return end
-    local _0x_hum = _0x_char:FindFirstChildOfClass("Humanoid") or _0x_char:WaitForChild("Humanoid", 3)
-    if not _0x_hum then return end
-    local _0x_animator = _0x_hum:FindFirstChildOfClass("Animator")
-    if not _0x_animator then
-        _0x_animator = Instance.new("Animator")
-        _0x_animator.Parent = _0x_hum
+local function playEmote(char)
+    if not EmoteEnabled then return end
+    char = char or LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e")) or char:WaitForChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e"), 3)
+    if not hum then return end
+    local animator = hum:FindFirstChildOfClass(_0xE("\x1b\x34\x33\x37\x3b\x2e\x35\x28"))
+    if not animator then
+        animator = Instance.new(_0xE("\x1b\x34\x33\x37\x3b\x2e\x35\x28"))
+        animator.Parent = hum
     end
 
-    for _, _0x_id in ipairs(_0xL_EMOTES) do
-        local _0x_ok, _0x_track = pcall(function()
-            local _0x_a = Instance.new("Animation")
-            _0x_a.AnimationId = _0x_id
-            local _0x_t = _0x_animator:LoadAnimation(_0x_a)
-            _0x_t.Priority = Enum.AnimationPriority.Action4
-            _0x_t.Looped = true
-            _0x_t:Play(0.1, 1, _0xL_EMOTESPEED)
-            return _0x_t
+    for _, id in ipairs(EMOTES) do
+        local ok, track = pcall(function()
+            local a = Instance.new(_0xE("\x1b\x34\x33\x37\x3b\x2e\x33\x35\x34"))
+            a.AnimationId = id
+            local t = animator:LoadAnimation(a)
+            t.Priority = Enum.AnimationPriority.Action4
+            t.Looped = true
+            t:Play(0.1, 1, EMOTESPEED)
+            return t
         end)
-        if _0x_ok and _0x_track then
-            _0xL_emoteTrack = _0x_track
-            _0x_track.Stopped:Connect(function()
-                if _0xL_EmoteEnabled then
-                    task.defer(function() playEmote(_0x_char) end)
+        if ok and track then
+            emoteTrack = track
+            track.Stopped:Connect(function()
+                if EmoteEnabled then
+                    task.defer(function() playEmote(char) end)
                 end
             end)
             return
@@ -616,84 +598,84 @@ local function playEmote(_0x_char)
     end
 end
 
-_0xL_LocalPlayer.CharacterAdded:Connect(function(_0x_char)
-    if _0xL_EmoteEnabled then
+LocalPlayer.CharacterAdded:Connect(function(char)
+    if EmoteEnabled then
         task.delay(0.5, function()
-            if _0xL_EmoteEnabled then playEmote(_0x_char) end
+            if EmoteEnabled then playEmote(char) end
         end)
     end
 end)
 
-_0xL_EmoteGroup:AddToggle('EnableEmoteSpeed', {
-    Text = 'Enable Fast Emote',
+EmoteGroup:AddToggle(_0xE("\x1f\x34\x3b\x38\x36\x3f\x1f\x37\x35\x2e\x3f\x09\x2a\x3f\x3f\x3e"), {
+    Text = _0xE("\x1f\x34\x3b\x38\x36\x3f\x20\x1c\x3b\x29\x2e\x20\x1f\x37\x35\x2e\x3f"),
     Default = false,
-    Tooltip = 'emote',
-    Callback = function(_0x_Value)
-        if _0x_Value then
-            _0xL_EmoteEnabled = true
-            playEmote(_0xL_LocalPlayer.Character)
+    Tooltip = _0xE("\x3f\x37\x35\x2e\x3f"),
+    Callback = function(Value)
+        if Value then
+            EmoteEnabled = true
+            playEmote(LocalPlayer.Character)
         else
             stopEmote()
         end
     end
 })
 
-_0xL_EmoteGroup:AddSlider('EmoteSpeedSlider', {
-    Text = 'Emote',
+EmoteGroup:AddSlider(_0xE("\x1f\x37\x35\x2e\x3f\x09\x2a\x3f\x3f\x3e\x13\x36\x33\x3e\x3f\x28"), {
+    Text = _0xE("\x1f\x37\x35\x2e\x3f"),
     Default = 1,
     Min = 1,
     Max = 1000,
     Rounding = 0,
     Compact = false,
-    Callback = function(_0x_Value)
-        _0xL_EMOTESPEED = _0x_Value
-        if _0xL_emoteTrack and _0xL_EmoteEnabled then
-            pcall(function() _0xL_emoteTrack:AdjustSpeed(_0xL_EMOTESPEED) end)
+    Callback = function(Value)
+        EMOTESPEED = Value
+        if emoteTrack and EmoteEnabled then
+            pcall(function() emoteTrack:AdjustSpeed(EMOTESPEED) end)
         end
     end
 })
 
-local _0xL_Group = _0xL_Tabs.Misc:AddLeftGroupbox('Device Spoofing')
-local _0xL_SetControlsRemote = _0xL_ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Replication"):WaitForChild("Fighter"):WaitForChild("SetControls")
+local Group = Tabs.Misc:AddLeftGroupbox(_0xE("\x1e\x3f\x2c\x33\x39\x3f\x20\x09\x2a\x35\x35\x3c\x33\x34\x3d"))
+local SetControlsRemote = ReplicatedStorage:WaitForChild(_0xE("\x08\x3f\x37\x35\x2e\x3f\x29")):WaitForChild(_0xE("\x12\x3f\x2a\x36\x33\x39\x3b\x2e\x33\x35\x34")):WaitForChild(_0xE("\x1c\x33\x3d\x32\x2e\x3f\x28")):WaitForChild(_0xE("\x09\x3f\x2e\x19\x35\x34\x2e\x28\x35\x36\x29"))
 
-_0xL_Group:AddDropdown('DeviceDropdown', {
-    Values = { 'PC (Mouse & Keyboard)', 'Mobile (Touch)', 'Controller (Gamepad)', 'VR' },
+Group:AddDropdown(_0xE("\x1e\x3f\x2c\x33\x39\x3f\x14\x28\x3f\x2a\x3e\x35\x2d\x34"), {
+    Values = { _0xE("\x0a\x19\x20\x72\x17\x35\x2f\x29\x3f\x20\x7c\x20\x11\x3f\x23\x38\x3f\x3b\x28\x3e\x23"), _0xE("\x1d\x35\x38\x33\x36\x3f\x20\x72\x0e\x35\x2f\x39\x32\x23"), _0xE("\x19\x35\x34\x2e\x28\x35\x36\x36\x3f\x28\x20\x72\x1d\x3b\x37\x3f\x2a\x3b\x3e\x23"), _0xE("\x0c\x08") },
     Default = 1,
-    Text = 'Device Spoof',
-    Callback = function(_0x_Value)
-        local _0x_TargetDevice = "MouseKeyboard"
-        if _0x_Value:find("PC") then _0x_TargetDevice = "MouseKeyboard"
-        elseif _0x_Value:find("Mobile") then _0x_TargetDevice = "Touch"
-        elseif _0x_Value:find("Controller") then _0x_TargetDevice = "Gamepad"
-        elseif _0x_Value:find("VR") then _0x_TargetDevice = "VR" end
+    Text = _0xE("\x1e\x3f\x2c\x33\x39\x3f\x20\x09\x2a\x35\x35\x3c"),
+    Callback = function(Value)
+        local TargetDevice = _0xE("\x1d\x35\x2f\x29\x3f\x11\x3f\x23\x38\x3f\x3b\x28\x3e")
+        if Value:find(_0xE("\x0a\x19")) then TargetDevice = _0xE("\x1d\x35\x2f\x29\x3f\x11\x3f\x23\x38\x3f\x3b\x28\x3e")
+        elseif Value:find(_0xE("\x1d\x35\x38\x33\x36\x3f")) then TargetDevice = _0xE("\x14\x35\x2f\x39\x32")
+        elseif Value:find(_0xE("\x19\x35\x34\x2e\x28\x35\x36\x36\x3f\x28")) then TargetDevice = _0xE("\x17\x3b\x37\x3f\x2a\x3b\x3e")
+        elseif Value:find(_0xE("\x0c\x08")) then TargetDevice = _0xE("\x0c\x08") end
 
-        _0xL_SetControlsRemote:FireServer("MouseKeyboard")
+        SetControlsRemote:FireServer(_0xE("\x1d\x35\x2f\x29\x3f\x11\x3f\x23\x38\x3f\x3b\x28\x3e"))
         task.wait(0.1)
-        _0xL_SetControlsRemote:FireServer(_0x_TargetDevice)
+        SetControlsRemote:FireServer(TargetDevice)
     end
 })
 
-_0xL_Group:AddButton({
-    Text = 'Apply Selected Device',
+Group:AddButton({
+    Text = _0xE("\x1b\x2a\x2a\x36\x23\x20\x09\x3f\x36\x3f\x39\x2e\x3f\x3e\x20\x1e\x3f\x2c\x33\x39\x3f"),
     Func = function()
-        if _0xL_Options and _0xL_Options.DeviceDropdown then
-            _0xL_Options.DeviceDropdown:OnChanged(_0xL_Options.DeviceDropdown.Value)
+        if Options and Options.DeviceDropdown then
+            Options.DeviceDropdown:OnChanged(Options.DeviceDropdown.Value)
         end
     end
 })
 
-local _0xL_SkinBox = _0xL_Tabs.Misc:AddRightGroupbox('Skin Changer')
-_0xL_SkinBox:AddButton('Unlock All', function()
+local SkinBox = Tabs.Misc:AddRightGroupbox(_0xE("\x09\x31\x33\x34\x20\x19\x38\x3b\x34\x3d\x3f\x28"))
+SkinBox:AddButton(_0xE("\x05\x34\x36\x3f\x39\x31\x20\x1b\x36\x36"), function()
     task.spawn(function()
         pcall(function()
             if getgenv().SkinChangerLoaded then 
-                _0xL_Library:Notify("The skin changer is already running!", 2)
+                Library:Notify(_0xE("\x14\x38\x3f\x20\x29\x3b\x33\x34\x20\x39\x38\x3b\x34\x3d\x3f\x28\x20\x33\x29\x20\x3b\x3c\x28\x3f\x3b\x3e\x23\x20\x28\x2f\x34\x34\x33\x34\x3d\x7b"), 2)
                 return 
             end
 
-            _0xL_Library:Notify("Loading Skin Changer...", 2)
+            Library:Notify(_0xE("\x1c\x3f\x3b\x3e\x33\x34\x3d\x20\x09\x31\x33\x34\x20\x19\x38\x3b\x34\x3d\x3f\x28\x74\x74\x74"), 2)
 
-            local _0x_scriptString = [=[
+            local scriptString = [=[
 local plrs = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
@@ -958,171 +940,171 @@ if ClientEntity and ClientEntity.ReplicateFromServer then
     end
 end
 ]=]
-            loadstring(_0x_scriptString)()
-            _0xL_Library:Notify("Skin unlock complete!", 3)
+            loadstring(scriptString)()
+            Library:Notify(_0xE("\x09\x31\x33\x34\x20\x2f\x34\x36\x35\x3d\x31\x20\x39\x35\x37\x2a\x36\x3f\x2e\x3f\x21"), 3)
         end)
     end)
 end)
 
-local _0xL_espData = {}
+local espData = {}
 
-local function addESP(_0x_p)
-    if _0x_p == _0xL_LocalPlayer then return end
+local function addESP(p)
+    if p == LocalPlayer then return end
     task.spawn(function()
-        local _0x_box, _0x_hpBg, _0x_hpBar, _0x_hpText, _0x_nameText, _0x_distText, _0x_tracer
+        local box, hpBg, hpBar, hpText, nameText, distText, tracer
         pcall(function()
             if Drawing then
-                _0x_box = Drawing.new("Square"); _0x_box.Visible = false; _0x_box.Color = Color3.new(1, 1, 1); _0x_box.Thickness = 1; _0x_box.Filled = false
-                _0x_hpBg = Drawing.new("Square"); _0x_hpBg.Visible = false; _0x_hpBg.Color = Color3.new(0, 0, 0); _0x_hpBg.Thickness = 1; _0x_hpBg.Filled = true
-                _0x_hpBar = Drawing.new("Square"); _0x_hpBar.Visible = false; _0x_hpBar.Color = Color3.new(0, 1, 0); _0x_hpBar.Thickness = 1; _0x_hpBar.Filled = true
-                _0x_hpText = Drawing.new("Text"); _0x_hpText.Visible = false; _0x_hpText.Center = true; _0x_hpText.Outline = true; _0x_hpText.Color = Color3.new(1, 1, 1); _0x_hpText.Size = 13
-                _0x_nameText = Drawing.new("Text"); _0x_nameText.Visible = false; _0x_nameText.Center = true; _0x_nameText.Outline = true; _0x_nameText.Color = Color3.new(1, 1, 1); _0x_nameText.Size = 13
-                _0x_distText = Drawing.new("Text"); _0x_distText.Visible = false; _0x_distText.Center = true; _0x_distText.Outline = true; _0x_distText.Color = Color3.new(1, 1, 1); _0x_distText.Size = 13
-                _0x_tracer = Drawing.new("Line"); _0x_tracer.Visible = false; _0x_tracer.Color = Color3.new(1, 1, 1); _0x_tracer.Thickness = 1
+                box = Drawing.new(_0xE("\x09\x21\x2f\x3b\x28\x3f")); box.Visible = false; box.Color = Color3.new(1, 1, 1); box.Thickness = 1; box.Filled = false
+                hpBg = Drawing.new(_0xE("\x09\x21\x2f\x3b\x28\x3f")); hpBg.Visible = false; hpBg.Color = Color3.new(0, 0, 0); hpBg.Thickness = 1; hpBg.Filled = true
+                hpBar = Drawing.new(_0xE("\x09\x21\x2f\x3b\x28\x3f")); hpBar.Visible = false; hpBar.Color = Color3.new(0, 1, 0); hpBar.Thickness = 1; hpBar.Filled = true
+                hpText = Drawing.new(_0xE("\x14\x3f\x22\x2e")); hpText.Visible = false; hpText.Center = true; hpText.Outline = true; hpText.Color = Color3.new(1, 1, 1); hpText.Size = 13
+                nameText = Drawing.new(_0xE("\x14\x3f\x22\x2e")); nameText.Visible = false; nameText.Center = true; nameText.Outline = true; nameText.Color = Color3.new(1, 1, 1); nameText.Size = 13
+                distText = Drawing.new(_0xE("\x14\x3f\x22\x2e")); distText.Visible = false; distText.Center = true; distText.Outline = true; distText.Color = Color3.new(1, 1, 1); distText.Size = 13
+                tracer = Drawing.new(_0xE("\x16\x33\x34\x3f")); tracer.Visible = false; tracer.Color = Color3.new(1, 1, 1); tracer.Thickness = 1
             end
         end)
         
-        if _0x_box then
-            _0xL_espData[_0x_p] = { Box = _0x_box, HpBg = _0x_hpBg, HealthBar = _0x_hpBar, HealthText = _0x_hpText, NameText = _0x_nameText, DistText = _0x_distText, Tracer = _0x_tracer, Skeleton = {} }
-            local _0x_bones = {{"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}}
-            for _, _0x_b in pairs(_0x_bones) do 
+        if box then
+            espData[p] = { Box = box, HpBg = hpBg, HealthBar = hpBar, HealthText = hpText, NameText = nameText, DistText = distText, Tracer = tracer, Skeleton = {} }
+            local bones = {{_0xE("\x12\x3f\x3b\x3e"), _0xE("\x05\x2a\x2a\x3f\x28\x04\x3f\x28\x29\x3f")}, {_0xE("\x05\x2a\x2a\x3f\x28\x04\x3f\x28\x29\x3f"), _0xE("\x16\x35\x2d\x3f\x28\x04\x3f\x28\x29\x3f")}, {_0xE("\x05\x2a\x2a\x3f\x28\x04\x3f\x28\x29\x3f"), _0xE("\x16\x3f\x3c\x2e\x05\x2a\x2a\x3f\x28\x1b\x28\x37")}, {_0xE("\x16\x3f\x3c\x2e\x05\x2a\x2a\x3f\x28\x1b\x28\x37"), _0xE("\x16\x3f\x3c\x2e\x16\x35\x2d\x3f\x28\x1b\x28\x37")}, {_0xE("\x05\x2a\x2a\x3f\x28\x04\x3f\x28\x29\x3f"), _0xE("\x02\x33\x2d\x38\x2e\x05\x2a\x2a\x3f\x28\x1b\x28\x37")}, {_0xE("\x02\x33\x2d\x38\x2e\x05\x2a\x2a\x3f\x28\x1b\x28\x37"), _0xE("\x02\x33\x2d\x38\x2e\x16\x35\x2d\x3f\x28\x1b\x28\x37")}, {_0xE("\x16\x35\x2d\x3f\x28\x04\x3f\x28\x29\x3f"), _0xE("\x16\x3f\x3c\x2e\x05\x2a\x2a\x3f\x28\x16\x3f\x2d")}, {_0xE("\x16\x3f\x3c\x2e\x05\x2a\x2a\x3f\x28\x16\x3f\x2d"), _0xE("\x16\x3f\x3c\x2e\x16\x35\x2d\x3f\x28\x16\x3f\x2d")}, {_0xE("\x16\x35\x2d\x3f\x28\x04\x3f\x28\x29\x3f"), _0xE("\x02\x33\x2d\x38\x2e\x05\x2a\x2a\x3f\x28\x16\x3f\x2d")}, {_0xE("\x02\x33\x2d\x38\x2e\x05\x2a\x2a\x3f\x28\x16\x3f\x2d"), _0xE("\x02\x33\x2d\x38\x2e\x16\x35\x2d\x3f\x28\x16\x3f\x2d")}, {_0xE("\x12\x3f\x3b\x3e"), _0xE("\x14\x3f\x28\x29\x3f")}, {_0xE("\x14\x3f\x28\x29\x3f"), _0xE("\x16\x3f\x3c\x2e\x20\x1b\x28\x37")}, {_0xE("\x14\x3f\x28\x29\x3f"), _0xE("\x02\x33\x2d\x38\x2e\x20\x1b\x28\x37")}, {_0xE("\x14\x3f\x28\x29\x3f"), _0xE("\x16\x3f\x3c\x2e\x20\x16\x3f\x2d")}, {_0xE("\x14\x3f\x28\x29\x3f"), _0xE("\x02\x33\x2d\x38\x2e\x20\x16\x3f\x2d")}}
+            for _, b in pairs(bones) do 
                 pcall(function() 
-                    if Drawing then table.insert(_0xL_espData[_0x_p].Skeleton, {_0x_b[1], _0x_b[2], Drawing.new("Line")}) end
+                    if Drawing then table.insert(espData[p].Skeleton, {b[1], b[2], Drawing.new(_0xE("\x16\x33\x34\x3f"))}) end
                 end) 
             end
         end
     end)
 end
 
-for _, _0x_p in ipairs(_0xL_Players:GetPlayers()) do addESP(_0x_p) end
-_0xL_Players.PlayerAdded:Connect(addESP)
-_0xL_Players.PlayerRemoving:Connect(function(_0x_p)
-    if _0xL_espData[_0x_p] then
+for _, p in ipairs(Players:GetPlayers()) do addESP(p) end
+Players.PlayerAdded:Connect(addESP)
+Players.PlayerRemoving:Connect(function(p)
+    if espData[p] then
         pcall(function()
-            _0xL_espData[_0x_p].Box:Remove(); _0xL_espData[_0x_p].HpBg:Remove(); _0xL_espData[_0x_p].HealthBar:Remove(); _0xL_espData[_0x_p].HealthText:Remove()
-            _0xL_espData[_0x_p].NameText:Remove(); _0xL_espData[_0x_p].DistText:Remove(); _0xL_espData[_0x_p].Tracer:Remove()
-            for _, _0x_s in pairs(_0xL_espData[_0x_p].Skeleton) do _0x_s[3]:Remove() end
+            espData[p].Box:Remove(); espData[p].HpBg:Remove(); espData[p].HealthBar:Remove(); espData[p].HealthText:Remove()
+            espData[p].NameText:Remove(); espData[p].DistText:Remove(); espData[p].Tracer:Remove()
+            for _, s in pairs(espData[p].Skeleton) do s[3]:Remove() end
         end)
-        _0xL_espData[_0x_p] = nil
+        espData[p] = nil
     end
 end)
 
-local function IsToggleActive(_0x_toggleName)
-    return _0xL_Toggles and _0xL_Toggles[_0x_toggleName] and _0xL_Toggles[_0x_toggleName].Value == true
+local function IsToggleActive(toggleName)
+    return Toggles and Toggles[toggleName] and Toggles[toggleName].Value == true
 end
 
-_0xL_RunService.RenderStepped:Connect(function()
-    local _0x_Camera = _0xL_Workspace.CurrentCamera
-    if not _0x_Camera then return end
+RunService.RenderStepped:Connect(function()
+    local Camera = Workspace.CurrentCamera
+    if not Camera then return end
 
-    for _0x_p, _0x_d in pairs(_0xL_espData) do
-        local _0x_isAlive = false
-        local _0x_c = _0x_p.Character
-        local _0x_root, _0x_head, _0x_rootPos, _0x_boxSize, _0x_boxPos, _0x_top, _0x_bottom, _0x_height, _0x_width
+    for p, d in pairs(espData) do
+        local isAlive = false
+        local c = p.Character
+        local root, head, rootPos, boxSize, boxPos, top, bottom, height, width
         
-        if _0x_c and _0x_c:FindFirstChild("Humanoid") and _0x_c.Humanoid.Health > 0 then
-            _0x_root = _0x_c:FindFirstChild("HumanoidRootPart")
-            _0x_head = _0x_c:FindFirstChild("Head") or _0x_c:FindFirstChild("UpperTorso") or _0x_c:FindFirstChild("Torso")
+        if c and c:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e")) and c.Humanoid.Health > 0 then
+            root = c:FindFirstChild(_0xE("\x12\x2f\x37\x3b\x34\x35\x33\x3e\x08\x35\x35\x2e\x0a\x3b\x28\x2e"))
+            head = c:FindFirstChild(_0xE("\x12\x3f\x3b\x3e")) or c:FindFirstChild(_0xE("\x05\x2a\x2a\x3f\x28\x04\x3f\x28\x29\x3f")) or c:FindFirstChild(_0xE("\x14\x3f\x28\x29\x3f"))
             
-            if _0x_root and _0x_head then
-                local _0x_rPos, _0x_onScreen = _0x_Camera:WorldToViewportPoint(_0x_root.Position)
-                if _0x_onScreen then
-                    _0x_isAlive = true
-                    _0x_rootPos = _0x_rPos
-                    local _0x_headPos = _0x_Camera:WorldToViewportPoint(_0x_head.Position + Vector3.new(0, 0.5, 0))
-                    local _0x_legPos = _0x_Camera:WorldToViewportPoint(_0x_root.Position - Vector3.new(0, 3, 0))
-                    _0x_height = math.abs(_0x_headPos.Y - _0x_legPos.Y)
-                    _0x_width = _0x_height * 0.6 
-                    _0x_boxSize = Vector2.new(_0x_width, _0x_height)
-                    _0x_boxPos = Vector2.new(_0x_rootPos.X - _0x_width / 2, _0x_headPos.Y)
-                    _0x_top = {Y = _0x_headPos.Y}
-                    _0x_bottom = {Y = _0x_legPos.Y}
+            if root and head then
+                local rPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                if onScreen then
+                    isAlive = true
+                    rootPos = rPos
+                    local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                    local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+                    height = math.abs(headPos.Y - legPos.Y)
+                    width = height * 0.6 
+                    boxSize = Vector2.new(width, height)
+                    boxPos = Vector2.new(rootPos.X - width / 2, headPos.Y)
+                    top = {Y = headPos.Y}
+                    bottom = {Y = legPos.Y}
                 end
             end
         end
         
-        if _0x_isAlive then
-            if IsToggleActive("ESPBox") then _0x_d.Box.Size = _0x_boxSize; _0x_d.Box.Position = _0x_boxPos; _0x_d.Box.Visible = true else _0x_d.Box.Visible = false end
+        if isAlive then
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x18\x35\x22")) then d.Box.Size = boxSize; d.Box.Position = boxPos; d.Box.Visible = true else d.Box.Visible = false end
             
-            if IsToggleActive("ESPHealth") then
-                local _0x_maxH = math.max(_0x_c.Humanoid.MaxHealth, 1)
-                local _0x_h = math.clamp(_0x_c.Humanoid.Health / _0x_maxH, 0, 1)
-                _0x_d.HpBg.Size = Vector2.new(4, _0x_height); _0x_d.HpBg.Position = Vector2.new(_0x_boxPos.X - 6, _0x_boxPos.Y); _0x_d.HpBg.Visible = true
-                local _0x_barHeight = _0x_height * _0x_h
-                _0x_d.HealthBar.Size = Vector2.new(2, _0x_barHeight); _0x_d.HealthBar.Position = Vector2.new(_0x_boxPos.X - 5, _0x_boxPos.Y + (_0x_height - _0x_barHeight))
-                _0x_d.HealthBar.Color = Color3.fromHSV(_0x_h * 0.33, 1, 1); _0x_d.HealthBar.Visible = true
-                _0x_d.HealthText.Text = tostring(math.floor(_0x_c.Humanoid.Health)); _0x_d.HealthText.Position = Vector2.new(_0x_boxPos.X - 25, _0x_boxPos.Y + (_0x_height - _0x_barHeight) - 6); _0x_d.HealthText.Visible = true
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x12\x3f\x3b\x36\x2e\x32")) then
+                local maxH = math.max(c.Humanoid.MaxHealth, 1)
+                local h = math.clamp(c.Humanoid.Health / maxH, 0, 1)
+                d.HpBg.Size = Vector2.new(4, height); d.HpBg.Position = Vector2.new(boxPos.X - 6, boxPos.Y); d.HpBg.Visible = true
+                local barHeight = height * h
+                d.HealthBar.Size = Vector2.new(2, barHeight); d.HealthBar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
+                d.HealthBar.Color = Color3.fromHSV(h * 0.33, 1, 1); d.HealthBar.Visible = true
+                d.HealthText.Text = tostring(math.floor(c.Humanoid.Health)); d.HealthText.Position = Vector2.new(boxPos.X - 25, boxPos.Y + (height - barHeight) - 6); d.HealthText.Visible = true
             else 
-                _0x_d.HpBg.Visible = false; _0x_d.HealthBar.Visible = false; _0x_d.HealthText.Visible = false 
+                d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false 
             end
             
-            if IsToggleActive("ESPName") then _0x_d.NameText.Text = _0x_p.Name; _0x_d.NameText.Position = Vector2.new(_0x_boxPos.X + _0x_width/2, _0x_top.Y - 15); _0x_d.NameText.Visible = true else _0x_d.NameText.Visible = false end
-            if IsToggleActive("ESPDistance") then local _0x_dist = math.floor((_0x_Camera.CFrame.Position - _0x_root.Position).Magnitude); _0x_d.DistText.Text = tostring(_0x_dist) .. "m"; _0x_d.DistText.Position = Vector2.new(_0x_boxPos.X + _0x_width/2, _0x_bottom.Y + 2); _0x_d.DistText.Visible = true else _0x_d.DistText.Visible = false end
-            if IsToggleActive("ESPTracer") then _0x_d.Tracer.From = Vector2.new(_0x_Camera.ViewportSize.X / 2, _0x_Camera.ViewportSize.Y); _0x_d.Tracer.To = Vector2.new(_0x_rootPos.X, _0x_bottom.Y); _0x_d.Tracer.Visible = true else _0x_d.Tracer.Visible = false end
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x14\x3b\x37\x3f")) then d.NameText.Text = p.Name; d.NameText.Position = Vector2.new(boxPos.X + width/2, top.Y - 15); d.NameText.Visible = true else d.NameText.Visible = false end
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x19\x33\x29\x2e\x3b\x34\x39\x3f")) then local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude); d.DistText.Text = tostring(dist) .. _0xE("\x37"); d.DistText.Position = Vector2.new(boxPos.X + width/2, bottom.Y + 2); d.DistText.Visible = true else d.DistText.Visible = false end
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x14\x28\x3b\x39\x3f\x28")) then d.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y); d.Tracer.To = Vector2.new(rootPos.X, bottom.Y); d.Tracer.Visible = true else d.Tracer.Visible = false end
             
-            if IsToggleActive("ESPSkeleton") then
-                for _, _0x_s in pairs(_0x_d.Skeleton) do
-                    local _0x_p1, _0x_p2 = _0x_c:FindFirstChild(_0x_s[1]), _0x_c:FindFirstChild(_0x_s[2])
-                    if _0x_p1 and _0x_p2 then
-                        local _0x_v1, _0x_o1 = _0x_Camera:WorldToViewportPoint(_0x_p1.Position)
-                        local _0x_v2, _0x_o2 = _0x_Camera:WorldToViewportPoint(_0x_p2.Position)
-                        if _0x_o1 and _0x_o2 then _0x_s[3].From = Vector2.new(_0x_v1.X, _0x_v1.Y); _0x_s[3].To = Vector2.new(_0x_v2.X, _0x_v2.Y); _0x_s[3].Visible = true; _0x_s[3].Color = Color3.new(1, 1, 1) else _0x_s[3].Visible = false end
-                    else _0x_s[3].Visible = false end
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x09\x31\x3f\x36\x3f\x2e\x35\x34")) then
+                for _, s in pairs(d.Skeleton) do
+                    local p1, p2 = c:FindFirstChild(s[1]), c:FindFirstChild(s[2])
+                    if p1 and p2 then
+                        local v1, o1 = Camera:WorldToViewportPoint(p1.Position)
+                        local v2, o2 = Camera:WorldToViewportPoint(p2.Position)
+                        if o1 and o2 then s[3].From = Vector2.new(v1.X, v1.Y); s[3].To = Vector2.new(v2.X, v2.Y); s[3].Visible = true; s[3].Color = Color3.new(1, 1, 1) else s[3].Visible = false end
+                    else s[3].Visible = false end
                 end
             else 
-                for _, _0x_s in pairs(_0x_d.Skeleton) do _0x_s[3].Visible = false end 
+                for _, s in pairs(d.Skeleton) do s[3].Visible = false end 
             end
             
-            local _0x_highlight = _0x_c:FindFirstChild("AntiHubChams")
-            if IsToggleActive("ESPChams") then
-                if not _0x_highlight then
-                    _0x_highlight = Instance.new("Highlight")
-                    _0x_highlight.Name = "AntiHubChams"
-                    _0x_highlight.FillColor = Color3.new(1, 0, 0)
-                    _0x_highlight.OutlineColor = Color3.new(1, 1, 1)
-                    _0x_highlight.FillTransparency = 0.5
-                    _0x_highlight.Parent = _0x_c
+            local highlight = c:FindFirstChild(_0xE("\x1b\x34\x2e\x33\x12\x2f\x32\x19\x38\x3b\x37\x29"))
+            if IsToggleActive(_0xE("\x1f\x09\x0a\x19\x38\x3b\x37\x29")) then
+                if not highlight then
+                    highlight = Instance.new(_0xE("\x12\x33\x3d\x28\x36\x33\x3d\x38\x2e"))
+                    highlight.Name = _0xE("\x1b\x34\x2e\x33\x12\x2f\x32\x19\x38\x3b\x37\x29")
+                    highlight.FillColor = Color3.new(1, 0, 0)
+                    highlight.OutlineColor = Color3.new(1, 1, 1)
+                    highlight.FillTransparency = 0.5
+                    highlight.Parent = c
                 end
             else
-                if _0x_highlight then _0x_highlight:Destroy() end
+                if highlight then highlight:Destroy() end
             end
         else
-            _0x_d.Box.Visible = false; _0x_d.HpBg.Visible = false; _0x_d.HealthBar.Visible = false; _0x_d.HealthText.Visible = false
-            _0x_d.NameText.Visible = false; _0x_d.DistText.Visible = false; _0x_d.Tracer.Visible = false
-            for _, _0x_s in pairs(_0x_d.Skeleton) do _0x_s[3].Visible = false end
+            d.Box.Visible = false; d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false
+            d.NameText.Visible = false; d.DistText.Visible = false; d.Tracer.Visible = false
+            for _, s in pairs(d.Skeleton) do s[3].Visible = false end
             
-            if _0x_c then
-                local _0x_highlight = _0x_c:FindFirstChild("AntiHubChams")
-                if _0x_highlight then _0x_highlight:Destroy() end
+            if c then
+                local highlight = c:FindFirstChild(_0xE("\x1b\x34\x2e\x33\x12\x2f\x32\x19\x38\x3b\x37\x29"))
+                if highlight then highlight:Destroy() end
             end
         end
     end
 end)
 
-local _0xL_SettingsMenu = _0xL_Tabs.Setting:AddLeftGroupbox('Menu Settings')
+local SettingsMenu = Tabs.Setting:AddLeftGroupbox(_0xE("\x17\x3f\x34\x2f\x20\x09\x3f\x2e\x2e\x33\x34\x3d\x29"))
 
-_0xL_SettingsMenu:AddButton('Unload UI', function()
-    _0xL_Library:Unload()
+SettingsMenu:AddButton(_0xE("\x0f\x34\x36\x3b\x3b\x3e\x20\x0f\x13"), function()
+    Library:Unload()
 end)
 
-_0xL_SettingsMenu:AddLabel('Menu Keybind'):AddKeyPicker('MenuKeybind', {
-    Default = 'End',
+SettingsMenu:AddLabel(_0xE("\x17\x3f\x34\x2f\x20\x11\x3f\x23\x38\x33\x34\x3e")):AddKeyPicker(_0xE("\x17\x3f\x34\x2f\x11\x3f\x23\x38\x33\x34\x3e"), {
+    Default = _0xE("\x1f\x34\x3e"),
     NoUI = true,
-    Text = 'Menu Keybind'
+    Text = _0xE("\x17\x3f\x34\x2f\x20\x11\x3f\x23\x38\x33\x34\x3e")
 })
 
-_0xL_Library.ToggleKeybind = _0xL_Options.MenuKeybind
+Library.ToggleKeybind = Options.MenuKeybind
 
-_0xL_ThemeManager:SetLibrary(_0xL_Library)
-_0xL_SaveManager:SetLibrary(_0xL_Library)
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
 
-_0xL_SaveManager:IgnoreThemeSettings()
-_0xL_SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ _0xE("\x17\x3f\x34\x2f\x11\x3f\x23\x38\x33\x34\x3e") })
 
-_0xL_ThemeManager:SetFolder('YumuEnchantment')
-_0xL_SaveManager:SetFolder('YumuEnchantment/configs')
+ThemeManager:SetFolder(_0xE("\x03\x2f\x37\x2f\x1f\x34\x39\x32\x3b\x34\x2e\x37\x3f\x34\x2e"))
+SaveManager:SetFolder(_0xE("\x03\x2f\x37\x2f\x1f\x34\x39\x32\x3b\x34\x2e\x37\x3f\x34\x2e\x75\x3d\x35\x34\x3c\x33\x3d\x29"))
 
-_0xL_SaveManager:BuildConfigSection(_0xL_Tabs.Setting)
-_0xL_ThemeManager:ApplyToTab(_0xL_Tabs.Setting)
+SaveManager:BuildConfigSection(Tabs.Setting)
+ThemeManager:ApplyToTab(Tabs.Setting)
 
-_0xL_SaveManager:LoadAutoloadConfig()
+SaveManager:LoadAutoloadConfig()
